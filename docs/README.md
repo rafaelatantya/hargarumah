@@ -1,6 +1,7 @@
 # HargaRumah Documentation Index
 
 > **Agents: Read this file FIRST before doing any work.**
+> **Jika melanjutkan pekerjaan yang sudah dimulai agent sebelumnya → baca [`progress.md`](./progress.md) SEKARANG.**
 
 This is the documentation hub for the HargaRumah property price scraper project.
 
@@ -8,6 +9,7 @@ This is the documentation hub for the HargaRumah property price scraper project.
 
 | Document | Path | Description |
 |---|---|---|
+| **🔴 Progress Tracker** | [`progress.md`](./progress.md) | Status per website + agent handoff protocol |
 | **Agent Instructions** | [`AGENTS.md`](../AGENTS.md) | Project rules, conventions, how to work |
 | **Architecture** | [`architecture.md`](./architecture.md) | System design, data flow, component map |
 | **Anti-Detection** | [`anti-detection.md`](./anti-detection.md) | Stealth scraping strategies |

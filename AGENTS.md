@@ -17,10 +17,12 @@ Given GPS coordinates (lat/lng) + radius, it collects house/apartment listings (
 
 ## 1. Before You Do Anything
 
-1. **Read `docs/README.md`** — the documentation index tells you what exists and where.
-2. **Check `docs/websites/`** — each target website has its own doc file with scraping steps.
-3. **Check `config/targets.yaml`** — the website registry with URL patterns and metadata.
-4. **Never scrape without reading the site-specific doc first.**
+1. **Read `docs/progress.md`** — if continuing someone else's work, this shows exactly where they stopped.
+2. **Read `docs/README.md`** — the documentation index tells you what exists and where.
+3. **Check `docs/websites/`** — each target website has its own doc file with scraping steps.
+4. **Check `config/targets.yaml`** — the website registry with URL patterns and metadata.
+5. **Never scrape without reading the site-specific doc first.**
+6. **Update `docs/progress.md`** when you start AND when you stop working.
 
 ---
 
