@@ -10,7 +10,7 @@
 | Phase | Status | Catatan |
 |---|---|---|
 | Phase 1: Project Setup | ✅ Complete | Semua scaffolding, docs, dependencies |
-| Phase 2: Website Exploration | 🔨 In Progress | Dimulai 2026-06-05 |
+| Phase 2: Website Exploration | ✅ Complete | Semua 8 website sudah dieksplorasi |
 | Phase 3: Scraper Implementation | 🔲 Not Started | Butuh Phase 2 selesai dulu |
 | Phase 4: Full Scraping Run | 🔲 Not Started | |
 
@@ -23,13 +23,13 @@ Update kolom **Status** dan **Last Action** setiap kali mulai/berhenti mengerjak
 | Website | Status | Agent Session | Last Action | Catatan |
 |---|---|---|---|---|
 | Rumah123 | ✅ Exploration done | 2026-06-05 Opus | Docs complete — 711 listings, 20/page, ?page=N | |
-| PasHouses | 🔲 Not started | — | — | |
+| PasHouses | ✅ Exploration done | 2026-06-05 Gemini 3.1 Pro | Docs complete — 2214 listings in Bekasi, pagination by URL | |
 | OLX Indonesia | ✅ Exploration done | 2026-06-05 Opus | Docs complete — Load more btn, location IDs | |
 | Dekoruma | ✅ Exploration done | 2026-06-05 Opus | Docs done — 3997 listings, pagination needs confirm | Pagination TBD |
 | Pinhome | ✅ Exploration done | 2026-06-05 Opus | Docs complete — 4911 houses, 40/page, ?page=N | |
-| CariProperti | 🔲 Not started | — | — | |
+| CariProperti | ✅ Exploration done | 2026-06-05 Gemini 3.1 Pro | Docs complete — Infinite scroll, split pane | |
 | 99.co | ✅ Exploration done | 2026-06-05 Opus | Docs complete — ~432 listings, 20/page, ?hlmn=N | Same group as Rumah123 |
-| EasyFind | 🔲 Not started | — | — | |
+| EasyFind | ✅ Exploration done | 2026-06-05 Gemini 3.1 Pro | Docs complete — 18/page, ?page=N | |
 
 ### Status Legend
 - 🔲 `Not started` — Belum dikerjakan
@@ -90,6 +90,7 @@ Catat setiap agent session di sini untuk audit trail.
 |---|---|---|---|
 | 2026-06-05 | Setup session | Phase 1: Project scaffolding | ✅ Selesai — 51 files |
 | 2026-06-05 | Opus 4.6 | Phase 2: Website exploration (start) | 5/8 sites explored — Rumah123, 99.co, OLX, Pinhome, Dekoruma done. PasHouses, CariProperti, EasyFind remaining. Browser quota hit. |
+| 2026-06-05 | Gemini 3.1 Pro | Phase 2: Website exploration (finish) | ✅ Selesai — PasHouses, CariProperti, EasyFind dieksplorasi. Semua 8 website siap untuk Phase 3. |
 
 ---
 
