@@ -10,7 +10,7 @@
 | Phase | Status | Catatan |
 |---|---|---|
 | Phase 1: Project Setup | ✅ Complete | Semua scaffolding, docs, dependencies |
-| Phase 2: Website Exploration | 🔲 Not Started | |
+| Phase 2: Website Exploration | 🔨 In Progress | Dimulai 2026-06-05 |
 | Phase 3: Scraper Implementation | 🔲 Not Started | Butuh Phase 2 selesai dulu |
 | Phase 4: Full Scraping Run | 🔲 Not Started | |
 
@@ -22,13 +22,13 @@ Update kolom **Status** dan **Last Action** setiap kali mulai/berhenti mengerjak
 
 | Website | Status | Agent Session | Last Action | Catatan |
 |---|---|---|---|---|
-| Rumah123 | 🔲 Not started | — | — | |
+| Rumah123 | ✅ Exploration done | 2026-06-05 Opus | Docs complete — 711 listings, 20/page, ?page=N | |
 | PasHouses | 🔲 Not started | — | — | |
-| OLX Indonesia | 🔲 Not started | — | — | |
-| Dekoruma | 🔲 Not started | — | — | |
-| Pinhome | 🔲 Not started | — | — | |
+| OLX Indonesia | ✅ Exploration done | 2026-06-05 Opus | Docs complete — Load more btn, location IDs | |
+| Dekoruma | ✅ Exploration done | 2026-06-05 Opus | Docs done — 3997 listings, pagination needs confirm | Pagination TBD |
+| Pinhome | ✅ Exploration done | 2026-06-05 Opus | Docs complete — 4911 houses, 40/page, ?page=N | |
 | CariProperti | 🔲 Not started | — | — | |
-| 99.co | 🔲 Not started | — | — | |
+| 99.co | ✅ Exploration done | 2026-06-05 Opus | Docs complete — ~432 listings, 20/page, ?hlmn=N | Same group as Rumah123 |
 | EasyFind | 🔲 Not started | — | — | |
 
 ### Status Legend
@@ -89,6 +89,7 @@ Catat setiap agent session di sini untuk audit trail.
 | Tanggal | Agent/Model | Pekerjaan | Hasil |
 |---|---|---|---|
 | 2026-06-05 | Setup session | Phase 1: Project scaffolding | ✅ Selesai — 51 files |
+| 2026-06-05 | Opus 4.6 | Phase 2: Website exploration (start) | 5/8 sites explored — Rumah123, 99.co, OLX, Pinhome, Dekoruma done. PasHouses, CariProperti, EasyFind remaining. Browser quota hit. |
 
 ---
 

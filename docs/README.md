@@ -22,13 +22,13 @@ Each target website has its own documentation file:
 
 | Website | Doc File | Status |
 |---|---|---|
-| Rumah123 | [`websites/rumah123.md`](./websites/rumah123.md) | 🔲 Not explored |
+| Rumah123 | [`websites/rumah123.md`](./websites/rumah123.md) | ✅ Explored |
 | PasHouses | [`websites/pashouses.md`](./websites/pashouses.md) | 🔲 Not explored |
-| OLX Indonesia | [`websites/olx.md`](./websites/olx.md) | 🔲 Not explored |
-| Dekoruma | [`websites/dekoruma.md`](./websites/dekoruma.md) | 🔲 Not explored |
-| Pinhome | [`websites/pinhome.md`](./websites/pinhome.md) | 🔲 Not explored |
+| OLX Indonesia | [`websites/olx.md`](./websites/olx.md) | ✅ Explored |
+| Dekoruma | [`websites/dekoruma.md`](./websites/dekoruma.md) | ✅ Explored (pagination TBD) |
+| Pinhome | [`websites/pinhome.md`](./websites/pinhome.md) | ✅ Explored |
 | CariProperti | [`websites/cariproperti.md`](./websites/cariproperti.md) | 🔲 Not explored |
-| 99.co | [`websites/99co.md`](./websites/99co.md) | 🔲 Not explored |
+| 99.co | [`websites/99co.md`](./websites/99co.md) | ✅ Explored |
 | EasyFind | [`websites/easyfind.md`](./websites/easyfind.md) | 🔲 Not explored |
 
 ## Configuration Files
