@@ -2,6 +2,7 @@
 
 > ⚠️ **SEBELUM MELAKUKAN APAPUN: Baca [`docs/progress.md`](./docs/progress.md) terlebih dahulu.**
 > Ini menunjukkan di mana pekerjaan terakhir berhenti dan apa yang harus dilanjutkan.
+> ⚠️ **SEBELUM MENGAKHIRI SESI: Wajib update `docs/progress.md` dengan status terakhir pekerjaanmu.**
 
 > **Read `AGENTS.md` for all project context, rules, and conventions.**
 > **Read `docs/README.md` for the full documentation index.**
