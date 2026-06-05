@@ -1,0 +1,1 @@
+"""HargaRumah test suite."""

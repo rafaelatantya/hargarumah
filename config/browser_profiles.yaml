@@ -1,0 +1,44 @@
+# HargaRumah — Browser Profile Configuration
+# Defines browser fingerprint settings for stealth scraping.
+
+default_profile:
+  # Browser launch settings
+  headless: false
+  lang: "id-ID"
+  
+  # Window size (realistic desktop resolution)
+  window_width: 1366
+  window_height: 768
+  
+  # Timezone (WIB - Western Indonesian Time)
+  timezone: "Asia/Jakarta"
+
+# Rotation profiles — cycle through these to vary fingerprint
+profiles:
+  - name: "desktop_1"
+    window_width: 1920
+    window_height: 1080
+    lang: "id-ID"
+    
+  - name: "desktop_2"
+    window_width: 1366
+    window_height: 768
+    lang: "id-ID"
+    
+  - name: "desktop_3"
+    window_width: 1440
+    window_height: 900
+    lang: "id-ID"
+    
+  - name: "desktop_4"
+    window_width: 1536
+    window_height: 864
+    lang: "id-ID,id"
+
+# Session rotation settings
+session:
+  # Max pages before creating a new browser session
+  max_pages_per_session: 100
+  # Delay between session rotations (seconds)
+  session_rotation_delay_min: 30
+  session_rotation_delay_max: 120

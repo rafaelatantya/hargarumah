@@ -1,0 +1,46 @@
+# HargaRumah Documentation Index
+
+> **Agents: Read this file FIRST before doing any work.**
+
+This is the documentation hub for the HargaRumah property price scraper project.
+
+## Documentation Map
+
+| Document | Path | Description |
+|---|---|---|
+| **Agent Instructions** | [`AGENTS.md`](../AGENTS.md) | Project rules, conventions, how to work |
+| **Architecture** | [`architecture.md`](./architecture.md) | System design, data flow, component map |
+| **Anti-Detection** | [`anti-detection.md`](./anti-detection.md) | Stealth scraping strategies |
+| **Data Schema** | [`data-schema.md`](./data-schema.md) | Output data specification |
+| **Website Guides** | [`websites/`](./websites/) | Per-site scraping documentation |
+
+## Website Documentation
+
+Each target website has its own documentation file:
+
+| Website | Doc File | Status |
+|---|---|---|
+| Rumah123 | [`websites/rumah123.md`](./websites/rumah123.md) | 🔲 Not explored |
+| PasHouses | [`websites/pashouses.md`](./websites/pashouses.md) | 🔲 Not explored |
+| OLX Indonesia | [`websites/olx.md`](./websites/olx.md) | 🔲 Not explored |
+| Dekoruma | [`websites/dekoruma.md`](./websites/dekoruma.md) | 🔲 Not explored |
+| Pinhome | [`websites/pinhome.md`](./websites/pinhome.md) | 🔲 Not explored |
+| CariProperti | [`websites/cariproperti.md`](./websites/cariproperti.md) | 🔲 Not explored |
+| 99.co | [`websites/99co.md`](./websites/99co.md) | 🔲 Not explored |
+| EasyFind | [`websites/easyfind.md`](./websites/easyfind.md) | 🔲 Not explored |
+
+## Configuration Files
+
+| File | Path | Description |
+|---|---|---|
+| Target Registry | [`config/targets.yaml`](../config/targets.yaml) | Website URLs & metadata |
+| Browser Profiles | [`config/browser_profiles.yaml`](../config/browser_profiles.yaml) | Fingerprint configs |
+| Defaults | [`config/default.yaml`](../config/default.yaml) | Scraping parameters |
+
+## How to Add a New Website
+
+1. Copy `websites/_template.md` to `websites/<new-site>.md`
+2. Have an Explorer Agent browse the site and fill in the template
+3. Add the site to `config/targets.yaml`
+4. Implement scraper in `src/scrapers/<new-site>.py` following `BaseScraper`
+5. Update this README's website table

@@ -1,0 +1,91 @@
+# HargaRumah — Target Website Registry
+# Each entry defines a target property website with its URL patterns and metadata.
+
+websites:
+  rumah123:
+    name: "Rumah123"
+    base_url: "https://www.rumah123.com"
+    search_pattern: "/jual/{city}/{district}/rumah/"
+    pagination: "url_param"  # url_param | load_more | infinite_scroll
+    max_requests_per_minute: 10
+    cloudflare: true
+    status: "pending"  # pending | active | blocked | disabled
+    notes: "Largest ID property portal. Cloudflare protected."
+    docs: "docs/websites/rumah123.md"
+
+  pashouses:
+    name: "PasHouses"
+    base_url: "https://pashouses.id"
+    search_pattern: "/rumah-dijual/area/{area}"
+    pagination: "unknown"
+    max_requests_per_minute: 15
+    cloudflare: false
+    status: "pending"
+    notes: "Area-based URL routing."
+    docs: "docs/websites/pashouses.md"
+
+  olx:
+    name: "OLX Indonesia"
+    base_url: "https://www.olx.co.id"
+    search_pattern: "/{city_code}/properti_c88"
+    pagination: "unknown"
+    max_requests_per_minute: 8
+    cloudflare: false
+    status: "pending"
+    notes: "General marketplace. Aggressive rate limiting. Uses location codes."
+    docs: "docs/websites/olx.md"
+
+  dekoruma:
+    name: "Dekoruma"
+    base_url: "https://www.dekoruma.com"
+    search_pattern: "/properti"
+    pagination: "unknown"
+    max_requests_per_minute: 12
+    cloudflare: false
+    status: "pending"
+    notes: "Interior design & property platform. Query-param based filtering."
+    docs: "docs/websites/dekoruma.md"
+
+  pinhome:
+    name: "Pinhome"
+    base_url: "https://www.pinhome.id"
+    search_pattern: "/jual/rumah"
+    pagination: "unknown"
+    max_requests_per_minute: 12
+    cloudflare: false
+    status: "pending"
+    notes: "Proptech platform. Path-based routing with filters."
+    docs: "docs/websites/pinhome.md"
+
+  cariproperti:
+    name: "CariProperti"
+    base_url: "https://cariproperti.com"
+    search_pattern: "/"
+    pagination: "unknown"
+    max_requests_per_minute: 15
+    cloudflare: false
+    status: "pending"
+    notes: "Property search engine. Needs full exploration."
+    docs: "docs/websites/cariproperti.md"
+
+  99co:
+    name: "99.co Indonesia"
+    base_url: "https://www.99.co"
+    search_pattern: "/id/jual/rumah/{city}/{district}"
+    pagination: "url_param"
+    max_requests_per_minute: 10
+    cloudflare: true
+    status: "pending"
+    notes: "Major SEA property portal. Deep path hierarchy. Same group as Rumah123."
+    docs: "docs/websites/99co.md"
+
+  easyfind:
+    name: "EasyFind"
+    base_url: "https://www.easyfind.id"
+    search_pattern: "/properties"
+    pagination: "unknown"
+    max_requests_per_minute: 15
+    cloudflare: false
+    status: "pending"
+    notes: "Property search platform. Needs exploration."
+    docs: "docs/websites/easyfind.md"

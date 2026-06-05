@@ -1,0 +1,57 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# ===== Virtual Environment =====
+.venv/
+venv/
+env/
+.uv/
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== Environment & Secrets =====
+.env
+.env.local
+.env.production
+
+# ===== Data Output (large files, regeneratable) =====
+data/raw/*.json
+data/raw/*.csv
+data/processed/*.json
+data/processed/*.csv
+data/exports/*.json
+data/exports/*.csv
+data/exports/*.xlsx
+!data/**/.gitkeep
+
+# ===== Browser Profiles & Cache =====
+browser_data/
+chrome_profile/
+*.log
+
+# ===== SQLite =====
+*.db
+*.sqlite
+*.sqlite3
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Misc =====
+*.bak
+*.tmp
+.cache/

@@ -1,0 +1,30 @@
+# HargaRumah — Default Scraping Parameters
+# These values can be overridden via environment variables (.env)
+
+geo:
+  # Default search location: Bekasi Selatan
+  default_latitude: -6.2607
+  default_longitude: 106.9894
+  default_radius_km: 5.0
+
+browser:
+  headless: false
+  lang: "id-ID"
+
+proxy:
+  use_free_proxy: false
+
+scraping:
+  # Delay between page navigations (seconds)
+  min_delay_seconds: 2.0
+  max_delay_seconds: 5.0
+  
+  # Listing collection targets
+  min_listings: 100
+  max_pages: 50
+  
+  # Browser session rotation
+  session_max_pages: 100
+
+# Logging
+log_level: "INFO"
