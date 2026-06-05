@@ -1,5 +1,8 @@
 # CLAUDE.md — Agent Entry Point
 
+> ⚠️ **SEBELUM MELAKUKAN APAPUN: Baca [`docs/progress.md`](./docs/progress.md) terlebih dahulu.**
+> Ini menunjukkan di mana pekerjaan terakhir berhenti dan apa yang harus dilanjutkan.
+
 > **Read `AGENTS.md` for all project context, rules, and conventions.**
 > **Read `docs/README.md` for the full documentation index.**
 
