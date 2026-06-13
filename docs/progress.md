@@ -57,7 +57,7 @@ Update kolom **Status** dan **Last Action** setiap kali mulai/berhenti mengerjak
 | OLX Indonesia | ✅ | `src/scrapers/olx.py` | ✅✅ Scraper done | Passed |
 | Dekoruma | 🔲 | `src/scrapers/dekoruma.py` | 🔲 Not started | — |
 | Pinhome | ✅ | `src/scrapers/pinhome.py` | ✅✅ Scraper done | Passed |
-| CariProperti | 🔲 | `src/scrapers/cariproperti.py` | 🔲 Not started | — |
+| CariProperti | ✅ | `src/scrapers/cariproperti.py` | ✅✅ Scraper done | Passed |
 | 99.co | ✅ | `src/scrapers/99co.py` | ✅✅ Scraper done | Passed |
 | EasyFind | 🔲 | `src/scrapers/easyfind.py` | 🔲 Not started | — |
 
