@@ -48,18 +48,18 @@ Update kolom **Status** dan **Last Action** setiap kali mulai/berhenti mengerjak
 - [x] Batch 1: Rumah123 & 99.co (Implemented & tested)
 - [x] Batch 2: Pinhome & OLX (Implemented & tested)
 - [x] Batch 3: CariProperti & Dekoruma
-- [ ] Batch 4: PasHouses & EasyFind
+- [x] Batch 4: PasHouses & EasyFind (Implemented & tested)
 
 | Website | Doc Ready? | Scraper File | Status | Test Result |
 |---|---|---|---|---|
 | Rumah123 | ✅ | `src/scrapers/rumah123.py` | ✅✅ Scraper done | Passed |
-| PasHouses | ✅ | `src/scrapers/pashouses.py` | 🔲 Not started | — |
+| PasHouses | ✅ | `src/scrapers/pashouses.py` | ✅✅ Scraper done | Passed |
 | OLX Indonesia | ✅ | `src/scrapers/olx.py` | ✅✅ Scraper done | Passed |
 | Dekoruma | 🔲 | `src/scrapers/dekoruma.py` | ✅✅ Scraper done | Passed |
 | Pinhome | ✅ | `src/scrapers/pinhome.py` | ✅✅ Scraper done | Passed |
 | CariProperti | ✅ | `src/scrapers/cariproperti.py` | ✅✅ Scraper done | Passed |
 | 99.co | ✅ | `src/scrapers/99co.py` | ✅✅ Scraper done | Passed |
-| EasyFind | ✅ | `src/scrapers/easyfind.py` | 🔲 Not started | — |
+| EasyFind | ✅ | `src/scrapers/easyfind.py` | ✅✅ Scraper done | Passed |
 
 ---
 
@@ -120,3 +120,4 @@ Setiap kali melakukan full scraping run, catat di sini:
 | — | — | — | — | — | — |
 | 2026-06-13 | Gemini Pro | Phase 3: Batch 2 Scraper Implementation | ✅ Selesai Pinhome & OLX scraper. |
 | 2026-06-13 | Gemini Max | Phase 3: Batch 3 Scraper Implementation | ✅ Selesai CariProperti & Dekoruma scraper via multi-agent workflow. |
+| 2026-06-13 | Gemini Max | Phase 3: Batch 4 Scraper Implementation | ✅ Selesai PasHouses & EasyFind scraper. |
