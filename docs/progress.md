@@ -41,17 +41,24 @@ Update kolom **Status** dan **Last Action** setiap kali mulai/berhenti mengerjak
 
 ---
 
-## Phase 3: Scraper Implementation Status
+## Phase 3: Scraper Implementation 
+**Status:** In Progress
+- [x] Create base scraper structure
+- [x] Setup SQLite storage layer
+- [x] Batch 1: Rumah123 & 99.co (Implemented & tested)
+- [x] Batch 2: Pinhome & OLX (Implemented & tested)
+- [ ] Batch 3: CariProperti & Dekoruma
+- [ ] Batch 4: PasHouses & EasyFind
 
 | Website | Doc Ready? | Scraper File | Status | Test Result |
 |---|---|---|---|---|
-| Rumah123 | 🔲 | `src/scrapers/rumah123.py` | 🔲 Not started | — |
+| Rumah123 | ✅ | `src/scrapers/rumah123.py` | ✅✅ Scraper done | Passed |
 | PasHouses | 🔲 | `src/scrapers/pashouses.py` | 🔲 Not started | — |
-| OLX Indonesia | 🔲 | `src/scrapers/olx.py` | 🔲 Not started | — |
+| OLX Indonesia | ✅ | `src/scrapers/olx.py` | ✅✅ Scraper done | Passed |
 | Dekoruma | 🔲 | `src/scrapers/dekoruma.py` | 🔲 Not started | — |
-| Pinhome | 🔲 | `src/scrapers/pinhome.py` | 🔲 Not started | — |
+| Pinhome | ✅ | `src/scrapers/pinhome.py` | ✅✅ Scraper done | Passed |
 | CariProperti | 🔲 | `src/scrapers/cariproperti.py` | 🔲 Not started | — |
-| 99.co | 🔲 | `src/scrapers/99co.py` | 🔲 Not started | — |
+| 99.co | ✅ | `src/scrapers/99co.py` | ✅✅ Scraper done | Passed |
 | EasyFind | 🔲 | `src/scrapers/easyfind.py` | 🔲 Not started | — |
 
 ---
@@ -91,6 +98,7 @@ Catat setiap agent session di sini untuk audit trail.
 | 2026-06-05 | Setup session | Phase 1: Project scaffolding | ✅ Selesai — 51 files |
 | 2026-06-05 | Opus 4.6 | Phase 2: Website exploration (start) | 5/8 sites explored — Rumah123, 99.co, OLX, Pinhome, Dekoruma done. PasHouses, CariProperti, EasyFind remaining. Browser quota hit. |
 | 2026-06-05 | Gemini 3.1 Pro | Phase 2: Website exploration (finish) | ✅ Selesai — PasHouses, CariProperti, EasyFind dieksplorasi. Semua 8 website siap untuk Phase 3. |
+| 2026-06-11 | Gemini 3 Flash Agent | Phase 3: Scraper Validation & Planning | ✅ Analisis Rumah123: regex bug (\\s vs \s) & label KT/KM hilang (pakai relative layout). Siap untuk Batch 2. |
 
 ---
 
@@ -109,3 +117,4 @@ Setiap kali melakukan full scraping run, catat di sini:
 | Tanggal | Koordinat | Radius | Total Listings | Output Files | Catatan |
 |---|---|---|---|---|---|
 | — | — | — | — | — | — |
+| 2026-06-13 | Gemini Pro | Phase 3: Batch 2 Scraper Implementation | ✅ Selesai Pinhome & OLX scraper. |
