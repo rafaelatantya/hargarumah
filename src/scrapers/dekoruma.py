@@ -17,7 +17,6 @@ class DekorumaScraper(BaseScraper):
 
     async def build_search_url(self, area_name: str, page: int = 1) -> str:
         """Construct the search URL for a given area and page number."""
-        # Clean and slugify the area name
         area_clean = area_name.strip().lower().replace("_", "-")
 
         if "/" in area_clean:
@@ -25,7 +24,6 @@ class DekorumaScraper(BaseScraper):
             city = parts[-2]
             district = parts[-1]
         else:
-            # Check if area_name is a known city, otherwise default to district
             known_cities = {
                 "bekasi", "depok", "tangerang", "bogor", "bandung", "surabaya",
                 "sidoarjo", "malang", "jakarta", "jakarta-selatan", "jakarta-barat",
@@ -40,10 +38,8 @@ class DekorumaScraper(BaseScraper):
                 district = area_clean
 
         if district:
-            # E.g., https://www.dekoruma.com/rumah-dijual/di-area-bekasi-selatan
             url = f"{self.base_url}/rumah-dijual/di-area-{district}"
         else:
-            # E.g., https://www.dekoruma.com/rumah-dijual/di-kota-bekasi
             url = f"{self.base_url}/rumah-dijual/di-kota-{city}"
 
         if page > 1:
@@ -57,7 +53,6 @@ class DekorumaScraper(BaseScraper):
         (() => {
             try {
                 const listings = [];
-                // Target cards that represent individual property listings
                 const cards = Array.from(document.querySelectorAll('a')).filter(a => {
                     return a.className.includes('link-reset') &&
                            a.href.includes('/properti/') &&
@@ -72,14 +67,24 @@ class DekorumaScraper(BaseScraper):
                     try {
                         const url = card.href;
 
-                        // Clean HTML tags and replace br with newlines to split correctly
-                        let innerHtml = card.innerHTML;
-                        innerHtml = innerHtml.replace(/<br\\s*\\/?>/gi, '\\\\n');
-                        innerHtml = innerHtml.replace(/<[^>]+>/g, '\\n');
+                        // Extract inner text which handles elements properly
+                        const innerText = card.innerText;
+                        const innerHTML = card.innerHTML;
+
+                        // For secondary homes, we look for parent elements of svgs
+                        const svgs = Array.from(card.querySelectorAll('svg'));
+                        const specsTexts = svgs.map(svg => {
+                            if (svg && svg.parentElement) {
+                                return svg.parentElement.innerText.trim();
+                            }
+                            return '';
+                        });
 
                         listings.push({
                             url: url,
-                            fullText: innerHtml
+                            fullText: innerText,
+                            html: innerHTML,
+                            specsTexts: specsTexts
                         });
                     } catch (innerErr) {
                         listings.push({error: innerErr.toString(), url: card.href});
@@ -97,14 +102,6 @@ class DekorumaScraper(BaseScraper):
         raw_listings = json.loads(raw_result)
 
         listings = []
-        if not raw_listings:
-            # Dump HTML for debugging if no listings found
-            html_content = await tab.evaluate("document.body.innerHTML")
-            with open("dekoruma_debug.html", "w", encoding="utf-8") as f:
-                f.write(html_content)
-            self._logger.warning("No listings found, dumped HTML to dekoruma_debug.html")
-            return listings
-
         for raw in raw_listings:
             try:
                 if "error" in raw:
@@ -114,73 +111,67 @@ class DekorumaScraper(BaseScraper):
                 if not url:
                     continue
 
-                # ID: Extract the last unique slug segment after the last dash
                 listing_id = url.split("-")[-1].strip("/")
 
-                # Split inner text to lines and clean them
                 text = raw.get("fullText", "")
                 lines = [line.strip() for line in text.split('\n') if line.strip()]
                 if not lines:
                     continue
 
-                # Base fields extraction
-                title = lines[1] if len(lines) > 1 else "No title"
+                title = lines[0]
+                if "NEW" in title.upper() and len(lines) > 1:
+                    title = lines[1]
                 title = html.unescape(title)
-                # Drop "NEW" prefix if it exists
                 title = re.sub(r'^(NEW\s+|NEW\n)', '', title, flags=re.IGNORECASE).strip()
 
-                # Find index of price and LT/LB labels
-                i_price = -1
-                i_lt = -1
-                i_lb = -1
+                price_text = None
+                for line in lines:
+                    if "Rp" in line:
+                        price_text = line
+                        break
 
-                for i, line in enumerate(lines):
-                    if re.match(r'^Rp\s*\d+', line, re.IGNORECASE):
-                        i_price = i
-                    elif line.upper() == 'LT':
-                        i_lt = i
-                    elif line.upper() == 'LB':
-                        i_lb = i
+                if not price_text:
+                    continue
 
-                if i_price == -1:
-                    continue  # Price is a mandatory field
-
-                price_text = lines[i_price]
                 price_idr = PropertyListing.parse_indonesian_price(price_text)
 
-                # Specs extraction (bedrooms, bathrooms, garage)
-                kt = None
-                km = None
-                garage = None
+                lt = lb = kt = km = None
 
-                if i_lt != -1:
-                    # Get digit lines between price and LT line
-                    middle_lines = lines[i_price + 1:i_lt]
-                    digits = [int(line) for line in middle_lines if line.isdigit()]
-                    if len(digits) >= 1:
-                        kt = digits[0]
-                    if len(digits) >= 2:
-                        km = digits[1]
-                    if len(digits) >= 3:
-                        garage = digits[2]
+                # Extract specs (Primary homes)
+                for line in lines:
+                    if "LT" in line.upper():
+                        val = re.search(r'([\d.,]+)', line)
+                        if val:
+                            lt = float(val.group(1).replace(',', '.'))
+                    elif "LB" in line.upper():
+                        val = re.search(r'([\d.,]+)', line)
+                        if val:
+                            lb = float(val.group(1).replace(',', '.'))
+                    elif "KT" in line.upper():
+                        val = re.search(r'(\d+)', line)
+                        if val:
+                            kt = int(val.group(1))
+                    elif "KM" in line.upper():
+                        val = re.search(r'(\d+)', line)
+                        if val:
+                            km = int(val.group(1))
 
-                # Land and building area
-                lt = None
-                lb = None
+                # Secondary homes might have isolated SVG spans
+                if kt is None or km is None:
+                    specs_texts = raw.get("specsTexts", [])
+                    plausible_specs = []
+                    for spec in specs_texts:
+                        # Extract digits only, e.g. "3\n2\n1" -> we only want the first or clean them
+                        num_match = re.search(r'^(\d+)$', spec.strip())
+                        if num_match:
+                            val = int(num_match.group(1))
+                            if val < 20: # Plausible bedroom/bathroom limit
+                                plausible_specs.append(val)
 
-                if i_lt != -1 and i_lt + 1 < len(lines):
-                    try:
-                        val_str = lines[i_lt + 1].replace(".", "").replace(",", ".")
-                        lt = float(val_str)
-                    except ValueError:
-                        pass
-
-                if i_lb != -1 and i_lb + 1 < len(lines):
-                    try:
-                        val_str = lines[i_lb + 1].replace(".", "").replace(",", ".")
-                        lb = float(val_str)
-                    except ValueError:
-                        pass
+                    if len(plausible_specs) >= 1 and kt is None:
+                        kt = plausible_specs[0]
+                    if len(plausible_specs) >= 2 and km is None:
+                        km = plausible_specs[1]
 
                 listing = PropertyListing(
                     id=listing_id,
@@ -192,7 +183,6 @@ class DekorumaScraper(BaseScraper):
                     building_area_m2=lb,
                     bedrooms=kt,
                     bathrooms=km,
-                    garage=garage,
                     property_type="rumah",
                     listing_type="dijual"
                 )
@@ -203,21 +193,12 @@ class DekorumaScraper(BaseScraper):
         return listings
 
     async def get_next_page(self, tab: Any) -> bool:
-        """Navigate to the next page of results.
-
-        Returns True if the current page has 20 or more listings,
-        which indicates it's a full page and a next page likely exists.
-        """
         js_code = """
         (() => {
             const cards = Array.from(document.querySelectorAll('a')).filter(a => {
                 return a.className.includes('link-reset') &&
                        a.href.includes('/properti/') &&
-                       !a.href.includes('/simulasi-kpr') &&
-                       !a.href.includes('/area/') &&
-                       !a.href.includes('/request') &&
-                       !a.href.includes('/login') &&
-                       !a.href.includes('/internal');
+                       !a.href.includes('/simulasi-kpr');
             });
             return cards.length >= 20;
         })();
