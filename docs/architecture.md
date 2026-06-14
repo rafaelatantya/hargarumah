@@ -19,10 +19,11 @@
 
 ## Component Responsibilities
 
-### 1. Geo Module (`src/core/geo.py`)
+### 1. Geo & Address Module (`src/core/geo.py`)
 - Converts GPS coordinates (lat/lng) to human-readable area names
 - Calculates which listings fall within the search radius
 - Maps area names to website-specific location identifiers
+- **Recursive Address Parsing**: Automatically breaks down full addresses from specific (Street/RT) to broad (Kecamatan/Kota). If a specific search yields fewer listings than requested, it falls back to broader levels sequentially to fulfill the target count.
 
 ### 2. Browser Manager (`src/core/browser.py`)
 - Initializes nodriver with stealth configuration

@@ -1,91 +1,87 @@
 # HargaRumah — Target Website Registry
-# Each entry defines a target property website with its URL patterns and metadata.
+# Metadata reference for all target property websites.
+# NOTE: This file is documentation-only — not consumed by Python code.
+# Scrapers have their own URL logic in src/scrapers/*.py.
 
 websites:
   rumah123:
     name: "Rumah123"
     base_url: "https://www.rumah123.com"
-    search_pattern: "/jual/{city}/{district}/rumah/"
-    pagination: "url_param"  # url_param | load_more | infinite_scroll
+    search_pattern: "/jual/cari/?q={keyword}&type=rumah&page={page}"
+    pagination: "url_param"  # ?page=N
     max_requests_per_minute: 10
     cloudflare: true
-    status: "pending"  # pending | active | blocked | disabled
-    notes: "Largest ID property portal. Cloudflare protected."
-    docs: "docs/websites/rumah123.md"
+    status: "active"
+    scraper: "src/scrapers/rumah123.py"
 
-  pashouses:
-    name: "PasHouses"
-    base_url: "https://pashouses.id"
-    search_pattern: "/rumah-dijual/area/{area}"
-    pagination: "unknown"
-    max_requests_per_minute: 15
-    cloudflare: false
-    status: "pending"
-    notes: "Area-based URL routing."
-    docs: "docs/websites/pashouses.md"
-
-  olx:
-    name: "OLX Indonesia"
-    base_url: "https://www.olx.co.id"
-    search_pattern: "/{city_code}/properti_c88"
-    pagination: "unknown"
-    max_requests_per_minute: 8
-    cloudflare: false
-    status: "pending"
-    notes: "General marketplace. Aggressive rate limiting. Uses location codes."
-    docs: "docs/websites/olx.md"
-
-  dekoruma:
-    name: "Dekoruma"
-    base_url: "https://www.dekoruma.com"
-    search_pattern: "/properti"
-    pagination: "unknown"
-    max_requests_per_minute: 12
-    cloudflare: false
-    status: "pending"
-    notes: "Interior design & property platform. Query-param based filtering."
-    docs: "docs/websites/dekoruma.md"
+  99co:
+    name: "99.co Indonesia"
+    base_url: "https://www.99.co/id"
+    search_pattern: "/jual/rumah/{city}/{district}?hlmn={page}"
+    pagination: "url_param"  # ?hlmn=N
+    max_requests_per_minute: 10
+    cloudflare: true
+    status: "active"
+    scraper: "src/scrapers/ninetynine_co.py"
 
   pinhome:
     name: "Pinhome"
     base_url: "https://www.pinhome.id"
-    search_pattern: "/jual/rumah"
-    pagination: "unknown"
+    search_pattern: "/jual/rumah/?keyword={keyword}&page={page}"
+    pagination: "url_param"  # ?page=N
     max_requests_per_minute: 12
     cloudflare: false
-    status: "pending"
-    notes: "Proptech platform. Path-based routing with filters."
-    docs: "docs/websites/pinhome.md"
+    status: "active"
+    scraper: "src/scrapers/pinhome.py"
+
+  olx:
+    name: "OLX Indonesia"
+    base_url: "https://www.olx.co.id"
+    search_pattern: "/{location_slug}_{location_id}/dijual-rumah-apartemen_c5158"
+    pagination: "load_more"  # "muat lainnya" button
+    max_requests_per_minute: 8
+    cloudflare: false
+    status: "active"
+    scraper: "src/scrapers/olx.py"
+    notes: "Requires location g-codes. See AREA_MAP in scraper."
 
   cariproperti:
     name: "CariProperti"
     base_url: "https://cariproperti.com"
-    search_pattern: "/"
-    pagination: "unknown"
+    search_pattern: "/{area_slug}"
+    pagination: "ajax_button"  # Client-side "Next" button, no URL change
     max_requests_per_minute: 15
     cloudflare: false
-    status: "pending"
-    notes: "Property search engine. Needs full exploration."
-    docs: "docs/websites/cariproperti.md"
+    status: "active"
+    scraper: "src/scrapers/cariproperti.py"
+    notes: "AJAX pagination — scraper overrides scrape() method."
 
-  99co:
-    name: "99.co Indonesia"
-    base_url: "https://www.99.co"
-    search_pattern: "/id/jual/rumah/{city}/{district}"
-    pagination: "url_param"
-    max_requests_per_minute: 10
-    cloudflare: true
-    status: "pending"
-    notes: "Major SEA property portal. Deep path hierarchy. Same group as Rumah123."
-    docs: "docs/websites/99co.md"
+  dekoruma:
+    name: "Dekoruma"
+    base_url: "https://www.dekoruma.com"
+    search_pattern: "/rumah-dijual/di-area-{district}?page={page}"
+    pagination: "url_param"  # ?page=N
+    max_requests_per_minute: 12
+    cloudflare: false
+    status: "active"
+    scraper: "src/scrapers/dekoruma.py"
+
+  pashouses:
+    name: "PasHouses"
+    base_url: "https://pashouses.id"
+    search_pattern: "/rumah-dijual/area/{city}/{district}/{page}"
+    pagination: "url_path"  # Page number in URL path
+    max_requests_per_minute: 15
+    cloudflare: false
+    status: "active"
+    scraper: "src/scrapers/pashouses.py"
 
   easyfind:
     name: "EasyFind"
     base_url: "https://www.easyfind.id"
-    search_pattern: "/properties"
-    pagination: "unknown"
+    search_pattern: "/properties?query={keyword}&page={page}"
+    pagination: "url_param"  # ?page=N
     max_requests_per_minute: 15
     cloudflare: false
-    status: "pending"
-    notes: "Property search platform. Needs exploration."
-    docs: "docs/websites/easyfind.md"
+    status: "active"
+    scraper: "src/scrapers/easyfind.py"

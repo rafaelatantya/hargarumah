@@ -13,10 +13,13 @@ Dekoruma is an Indonesian interior design and property platform. The property se
 
 ## 2. URL Patterns
 
-### Search URL
+### Search URL (scraper implementation)
 ```
-https://www.dekoruma.com/properti/dijual/{city}/{district}
+https://www.dekoruma.com/rumah-dijual/di-area-{district}?page={page}
+https://www.dekoruma.com/rumah-dijual/di-kota-{city}?page={page}
 ```
+
+> **Note**: The scraper uses `/rumah-dijual/di-area-{district}` (or `/di-kota-{city}`) rather than the exploration-discovered path `/properti/dijual/{city}/{district}`. Both work.
 
 ### Search Flow URL Construction
 The search starts at `/properti`, then after searching for a location, navigates to:
@@ -32,7 +35,7 @@ Properti > Dijual > Bekasi > Bekasi Selatan
 ### URL Parameters
 | Parameter | Description | Example |
 |---|---|---|
-| TBD | Pagination — needs further exploration | |
+| `page` | Page number (1-indexed) | `?page=2` |
 
 ### Example URLs
 ```
@@ -101,10 +104,12 @@ Each card in a 2-column grid:
 
 ## 5. Pagination Type
 
-- [ ] URL parameter — needs confirmation
-- [ ] "Load More" button — needs confirmation
-- [ ] Infinite scroll — needs confirmation
-- [x] **Needs further exploration** — agent quota ran out before pagination could be tested
+- [x] URL parameter (`?page=N`)
+- [ ] "Load More" button
+- [ ] Infinite scroll
+
+### Implementation
+The scraper uses `?page=N` pagination. `get_next_page()` checks if the current page has ≥20 property cards — if so, assumes there's a next page.
 
 ## 6. Anti-Bot Measures Observed
 
@@ -138,5 +143,5 @@ Screenshots captured during exploration:
 - Price format is unique: `Rp3M`, `Rp2,3M` — no spaces, comma decimal
 - 2-column grid layout
 - Clean URL pattern: `/properti/dijual/{city}/{district}`
-- **TODO**: Pagination mechanism needs follow-up exploration (ran out of quota)
+- Pagination via `?page=N` — scraper checks card count to determine if next page exists
 - Search starts at `/properti` → form submission → redirects to `/properti/dijual/{city}/{district}`

@@ -1,7 +1,7 @@
 # HargaRumah — Progress Tracker
 
 > **Baca file ini PERTAMA** sebelum melanjutkan pekerjaan apapun.
-> Update file ini setiap kali memulai/menyelesaikan sebuah task.
+> Update file ini setiap kali memulai/menyelesaikan task.
 
 ---
 
@@ -9,115 +9,69 @@
 
 | Phase | Status | Catatan |
 |---|---|---|
-| Phase 1: Project Setup | ✅ Complete | Semua scaffolding, docs, dependencies |
-| Phase 2: Website Exploration | ✅ Complete | Semua 8 website sudah dieksplorasi |
-| Phase 3: Scraper Implementation | 🔲 Not Started | Butuh Phase 2 selesai dulu |
-| Phase 4: Full Scraping Run | 🔲 Not Started | |
+| Phase 1: Project Setup | ✅ Complete | Scaffolding, docs, dependencies |
+| Phase 2: Website Exploration | ✅ Complete | Semua 8 website dieksplorasi |
+| Phase 3: Scraper Implementation | ✅ Complete | Semua 8 scraper implemented & tested |
+| Phase 4: Full Scraping Run | 🔲 Not Started | Next step |
 
 ---
 
-## Phase 2: Website Exploration Status
+## Phase 3: Scraper Status
 
-Update kolom **Status** dan **Last Action** setiap kali mulai/berhenti mengerjakan sebuah website.
-
-| Website | Status | Agent Session | Last Action | Catatan |
-|---|---|---|---|---|
-| Rumah123 | ✅ Exploration done | 2026-06-05 Opus | Docs complete — 711 listings, 20/page, ?page=N | |
-| PasHouses | ✅ Exploration done | 2026-06-05 Gemini 3.1 Pro | Docs complete — 2214 listings in Bekasi, pagination by URL | |
-| OLX Indonesia | ✅ Exploration done | 2026-06-05 Opus | Docs complete — Load more btn, location IDs | |
-| Dekoruma | ✅ Exploration done | 2026-06-05 Opus | Docs done — 3997 listings, pagination needs confirm | Pagination TBD |
-| Pinhome | ✅ Exploration done | 2026-06-05 Opus | Docs complete — 4911 houses, 40/page, ?page=N | |
-| CariProperti | ✅ Exploration done | 2026-06-05 Gemini 3.1 Pro | Docs complete — Infinite scroll, split pane | |
-| 99.co | ✅ Exploration done | 2026-06-05 Opus | Docs complete — ~432 listings, 20/page, ?hlmn=N | Same group as Rumah123 |
-| EasyFind | ✅ Exploration done | 2026-06-05 Gemini 3.1 Pro | Docs complete — 18/page, ?page=N | |
-
-### Status Legend
-- 🔲 `Not started` — Belum dikerjakan
-- 🔨 `In progress` — Sedang dikerjakan (update dengan nama/tanggal agent session)
-- ✅ `Exploration done` — `docs/websites/<site>.md` sudah lengkap
-- 🛠️ `Scraper in progress` — `src/scrapers/<site>.py` sedang diimplementasi
-- ✅✅ `Scraper done` — Implementasi selesai, sudah di-test
-- ❌ `Blocked` — Ada masalah (login wall, heavy bot protection, dll) — lihat catatan
+| Website | Scraper File | Status | Test |
+|---|---|---|---|
+| Rumah123 | `src/scrapers/rumah123.py` | ✅ Done | Passed |
+| 99.co | `src/scrapers/ninetynine_co.py` | ✅ Done | Passed |
+| Pinhome | `src/scrapers/pinhome.py` | ✅ Done | Passed |
+| OLX Indonesia | `src/scrapers/olx.py` | ✅ Done | Passed |
+| CariProperti | `src/scrapers/cariproperti.py` | ✅ Done | Passed |
+| Dekoruma | `src/scrapers/dekoruma.py` | ✅ Done | Passed |
+| PasHouses | `src/scrapers/pashouses.py` | ✅ Done | Passed |
+| EasyFind | `src/scrapers/easyfind.py` | ✅ Done | Passed |
 
 ---
 
-## Phase 3: Scraper Implementation 
-**Status:** In Progress
-- [x] Create base scraper structure
-- [x] Setup SQLite storage layer
-- [x] Batch 1: Rumah123 & 99.co (Implemented & tested)
-- [x] Batch 2: Pinhome & OLX (Implemented & tested)
-- [x] Batch 3: CariProperti & Dekoruma
-- [x] Batch 4: PasHouses & EasyFind (Implemented & tested)
+## Phase 4: TODO
 
-| Website | Doc Ready? | Scraper File | Status | Test Result |
-|---|---|---|---|---|
-| Rumah123 | ✅ | `src/scrapers/rumah123.py` | ✅✅ Scraper done | Passed |
-| PasHouses | ✅ | `src/scrapers/pashouses.py` | ✅✅ Scraper done | Passed |
-| OLX Indonesia | ✅ | `src/scrapers/olx.py` | ✅✅ Scraper done | Passed |
-| Dekoruma | 🔲 | `src/scrapers/dekoruma.py` | ✅✅ Scraper done | Passed |
-| Pinhome | ✅ | `src/scrapers/pinhome.py` | ✅✅ Scraper done | Passed |
-| CariProperti | ✅ | `src/scrapers/cariproperti.py` | ✅✅ Scraper done | Passed |
-| 99.co | ✅ | `src/scrapers/99co.py` | ✅✅ Scraper done | Passed |
-| EasyFind | ✅ | `src/scrapers/easyfind.py` | ✅✅ Scraper done | Passed |
+- [ ] Wire all 8 scrapers into `main.py` (currently only Rumah123)
+- [ ] Add `--site` flag to select specific scraper(s)
+- [ ] Integrate SQLite storage layer into main flow
+- [ ] Run full scraping session with Bekasi Selatan coordinates
+- [ ] Export results to JSON/CSV/XLSX
+- [ ] Validate data quality across all sources
 
 ---
 
-## Handoff Protocol (WAJIB dibaca saat ganti agent)
+## Handoff Protocol
 
-### Jika kamu adalah agent baru yang mengambil alih:
+### Agent baru:
+1. Baca file ini — lihat status terakhir
+2. Cek file yang relevan dengan task
+3. Lanjutkan dari titik terakhir — jangan restart dari awal
+4. Update file ini sebelum mulai dan setelah selesai
 
-1. **Baca file ini** — lihat di mana pekerjaan terakhir berhenti
-2. **Cek file yang "In progress"**:
-   - Kalau website exploration: buka `docs/websites/<site>.md` — lihat section mana yang sudah diisi vs masih template
-   - Kalau scraper: buka `src/scrapers/<site>.py` — cek apakah class sudah complete atau ada `...` / `TODO`
-3. **Lanjutkan dari titik terakhir** — jangan restart dari awal
-4. **Update tabel di atas** sebelum mulai kerja (ganti status jadi `In progress`)
-5. **Update lagi** setelah selesai (ganti status jadi `done`)
-
-### Jika kamu adalah agent lama yang akan berhenti (quota hampir habis):
-
-1. **Update tabel di atas** — tandai di mana kamu berhenti
-2. **Tulis catatan di kolom "Last Action"** — spesifik, contoh: "Sudah explore halaman search, belum document CSS selectors"
-3. **Commit semua file yang sudah dikerjakan** — jangan tinggalkan file setengah jadi tanpa commit
-4. **Kalau file setengah jadi**, tambahkan comment di dalamnya:
-   ```
-   # TODO: AGENT HANDOFF - Lanjutkan dari sini
-   # Sudah: [deskripsi apa yang sudah dikerjakan]
-   # Belum: [deskripsi apa yang belum]
-   ```
+### Agent lama (sebelum berhenti):
+1. Update status di atas
+2. Commit semua file
+3. Kalau setengah jadi, tambahkan `# TODO: AGENT HANDOFF` di code
 
 ---
 
 ## Session Log
 
-Catat setiap agent session di sini untuk audit trail.
-
-| Tanggal | Agent/Model | Pekerjaan | Hasil |
+| Tanggal | Agent | Pekerjaan | Hasil |
 |---|---|---|---|
-| 2026-06-05 | Setup session | Phase 1: Project scaffolding | ✅ Selesai — 51 files |
-| 2026-06-05 | Opus 4.6 | Phase 2: Website exploration (start) | 5/8 sites explored — Rumah123, 99.co, OLX, Pinhome, Dekoruma done. PasHouses, CariProperti, EasyFind remaining. Browser quota hit. |
-| 2026-06-05 | Gemini 3.1 Pro | Phase 2: Website exploration (finish) | ✅ Selesai — PasHouses, CariProperti, EasyFind dieksplorasi. Semua 8 website siap untuk Phase 3. |
-| 2026-06-11 | Gemini 3 Flash Agent | Phase 3: Scraper Validation & Planning | ✅ Analisis Rumah123: regex bug (\\s vs \s) & label KT/KM hilang (pakai relative layout). Siap untuk Batch 2. |
-| 2026-06-13 | Antigravity | Phase 3: Dekoruma Scraper Implementation | ✅ Selesai Dekoruma scraper & test passed. |
+| 2026-06-05 | Setup | Phase 1: Scaffolding | ✅ 51 files |
+| 2026-06-05 | Opus 4.6 | Phase 2: Explore 5/8 sites | ✅ Rumah123, 99.co, OLX, Pinhome, Dekoruma |
+| 2026-06-05 | Gemini 3.1 Pro | Phase 2: Explore 3/8 sites | ✅ PasHouses, CariProperti, EasyFind |
+| 2026-06-11 | Gemini 3 Flash | Phase 3: Rumah123 bug analysis | ✅ regex + label fixes |
+| 2026-06-13 | Multiple agents | Phase 3: All 8 scrapers | ✅ Batch 1-4 complete |
+| 2026-06-13 | Claude Code | Rumah123 reliability fix | ✅ keyword search, 20 listings |
+| 2026-06-13 | Claude Code | Tools integration | ✅ claude-mem, graphify |
+| 2026-06-14 | Claude Code | Docs cleanup & consolidation | ✅ Merged CLAUDE.md+AGENTS.md, deleted junk |
 
 ---
 
 ## Blocked Items
 
-Website atau fitur yang blocked dan butuh perhatian khusus:
-
-_(kosong sementara — isi kalau ada website yang tidak bisa di-scrape)_
-
----
-
-## Data Scraping Sessions
-
-Setiap kali melakukan full scraping run, catat di sini:
-
-| Tanggal | Koordinat | Radius | Total Listings | Output Files | Catatan |
-|---|---|---|---|---|---|
-| — | — | — | — | — | — |
-| 2026-06-13 | Gemini Pro | Phase 3: Batch 2 Scraper Implementation | ✅ Selesai Pinhome & OLX scraper. |
-| 2026-06-13 | Gemini Max | Phase 3: Batch 3 Scraper Implementation | ✅ Selesai CariProperti & Dekoruma scraper via multi-agent workflow. |
-| 2026-06-13 | Gemini Max | Phase 3: Batch 4 Scraper Implementation | ✅ Selesai PasHouses & EasyFind scraper. |
+_(kosong — isi kalau ada website yang tidak bisa di-scrape)_

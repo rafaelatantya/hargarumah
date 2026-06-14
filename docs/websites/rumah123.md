@@ -13,44 +13,42 @@ Rumah123.com is one of the largest property listing portals in Indonesia. Part o
 
 ## 2. URL Patterns
 
-### Search URL
+### Search URL (current implementation)
 ```
-https://www.rumah123.com/jual/{city}/{district}/rumah/
+https://www.rumah123.com/jual/cari/?q={keyword}&type=rumah&page={page}
 ```
+
+> **Note**: The scraper uses keyword search (`/jual/cari/?q=`) instead of the path-based pattern (`/jual/{city}/{district}/rumah/`). This is more reliable — works for any location without needing city/district hierarchy.
 
 ### URL Parameters
 | Parameter | Description | Example |
 |---|---|---|
-| `page` | Page number (1-indexed) | `?page=2` |
+| `q` | Search keyword (location name) | `?q=harjamukti` |
+| `type` | Property type filter | `&type=rumah` |
+| `page` | Page number (1-indexed) | `&page=2` |
 
 ### Pagination
-- Type: **URL parameter** (`?page=N`)
-- 20 listings per page
-- Page numbers visible at bottom: `1, 2, 3, ..., 36`
+- Type: **URL parameter** (`&page=N`)
+- ~20 listings per page
 - Next page button: `a[aria-label="Next page"]`
 
 ### Example URLs
 ```
-# Page 1 (default)
+# Keyword search — page 1
+https://www.rumah123.com/jual/cari/?q=harjamukti&type=rumah
+
+# Keyword search — page 2
+https://www.rumah123.com/jual/cari/?q=harjamukti&type=rumah&page=2
+
+# Path-based (legacy, still works)
 https://www.rumah123.com/jual/bekasi/bekasi-selatan/rumah/
-
-# Page 2
-https://www.rumah123.com/jual/bekasi/bekasi-selatan/rumah/?page=2
-
-# Page 3
-https://www.rumah123.com/jual/bekasi/bekasi-selatan/rumah/?page=3
-
-# Other districts
-https://www.rumah123.com/jual/bekasi/bekasi-barat/rumah/
-https://www.rumah123.com/jual/bekasi/rawalumbu/rumah/
-https://www.rumah123.com/jual/bekasi/bekasi-timur/rumah/
 ```
 
 ## 3. Search Flow (Step by Step)
 
-1. Navigate directly to `https://www.rumah123.com/jual/bekasi/{district}/rumah/`
+1. Navigate to `https://www.rumah123.com/jual/cari/?q={keyword}&type=rumah`
 2. Page loads with search results immediately — no interaction needed
-3. Location is encoded in the URL path (e.g., `bekasi/bekasi-selatan`)
+3. Keyword in the `q` parameter (e.g., `harjamukti`, `bekasi selatan`)
 4. Search bar shows "Bekasi Selatan, Bekasi, Jawa Barat" confirming location
 5. Results show header: "Menampilkan 1-20 dari 711 properti"
 6. Filter chips available: "Properti Baru", "Properti dengan video", "Harga", "Luas Tanah"

@@ -88,7 +88,7 @@ class BaseScraper(ABC):
 
         Iterates through search result pages until either:
         - min_listings is reached
-        - max_pages is reached
+        - max_pages is reached (if provided)
         - No more pages available
 
         Args:
@@ -96,7 +96,7 @@ class BaseScraper(ABC):
             min_listings: Minimum number of listings to collect.
                           Defaults to settings.scraping.min_listings.
             max_pages: Maximum number of pages to scrape.
-                       Defaults to settings.scraping.max_pages.
+                       Defaults to None (Dynamic - keep going until min_listings met).
 
         Returns:
             List of all collected PropertyListing objects.
@@ -104,7 +104,7 @@ class BaseScraper(ABC):
         if min_listings is None:
             min_listings = settings.scraping.min_listings
         if max_pages is None:
-            max_pages = settings.scraping.max_pages
+            max_pages = 999  # Praktis infinite, biarkan min_listings atau has_next yg menghentikan
 
         all_listings: list[PropertyListing] = []
         page_num = 1

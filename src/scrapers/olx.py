@@ -17,6 +17,7 @@ class OlxScraper(BaseScraper):
     # Area mapping dictionary - key is kebab-case area name, value is (location-slug, location-id)
     # OLX requires specific location IDs in URLs
     AREA_MAP = {
+        "bekasi": ("bekasi-kota", "g4000020"),
         "bekasi-selatan": ("bekasi-selatan", "g5001297"),
         "bekasi-kota": ("bekasi-kota", "g4000020"),
         "bandung-kota": ("bandung-kota", "g4000018"),
@@ -33,14 +34,19 @@ class OlxScraper(BaseScraper):
 
     async def build_search_url(self, area_name: str, page: int = 1) -> str:
         """Construct the search URL for a given area. Note: OLX uses load more, not pages."""
-        area_key = area_name.lower().replace("_", "-")
-        if "/" in area_key:
-            area_key = area_key.split("/")[-1]
+        # Clean up keyword
+        keyword = area_name.replace("/", "-").replace("_", "-").strip()
 
-        location_slug, location_id = self.AREA_MAP.get(area_key, ("bekasi-kota", "g4000020"))
+        # Try to use mapping if available, otherwise use global keyword search
+        location_data = self.AREA_MAP.get(keyword.lower())
 
-        # We start with page 1, subsequent pages are loaded via "muat lainnya" button
-        url = f"{self.base_url}/{location_slug}_{location_id}/dijual-rumah-apartemen_c5158?filter=type_eq_rumah"
+        if location_data:
+            location_slug, location_id = location_data
+            url = f"{self.base_url}/{location_slug}_{location_id}/dijual-rumah-apartemen_c5158?filter=type_eq_rumah"
+        else:
+            # Fallback to keyword search across Indonesia BUT inside property category
+            url = f"{self.base_url}/dijual-rumah-apartemen_c5158/q-{keyword}?filter=type_eq_rumah"
+
         return url
 
     async def extract_listings(self, tab: Any) -> list[PropertyListing]:
@@ -196,5 +202,66 @@ class OlxScraper(BaseScraper):
         has_next = await tab.evaluate(js_code)
         if has_next:
             # Wait for content to load after clicking
-            await asyncio.sleep(3)
+            await asyncio.sleep(4)
+            # Scroll down a bit to ensure images/lazy content load
+            await tab.evaluate("window.scrollBy(0, 1000)")
+            await asyncio.sleep(1)
         return has_next
+
+    async def scrape(
+        self,
+        area_name: str,
+        min_listings: int | None = None,
+        max_pages: int | None = None,
+    ) -> list[PropertyListing]:
+        """Override scrape to handle Load More pagination instead of URL page reloading."""
+        from src.config.settings import settings
+
+        if min_listings is None:
+            min_listings = settings.scraping.min_listings
+        if max_pages is None:
+            max_pages = 999
+
+        all_listings_dict: dict[str, PropertyListing] = {}
+
+        url = await self.build_search_url(area_name)
+        self._logger.info(f"Starting OLX scrape on {url}")
+
+        tab = await self.browser.get_page(url)
+        # Wait for page content to load
+        import random
+        await asyncio.sleep(random.uniform(2.0, 4.0))
+
+        page_num = 1
+        while page_num <= max_pages:
+            # Extract listings from current page state
+            listings = await self.extract_listings(tab)
+            if not listings:
+                self._logger.info("No listings found on page %d, stopping.", page_num)
+                break
+
+            for listing in listings:
+                all_listings_dict[listing.id] = listing
+
+            self._logger.info(
+                "Page %d: extracted %d listings (total unique: %d)",
+                page_num, len(listings), len(all_listings_dict),
+            )
+
+            # Check if we have enough listings
+            if len(all_listings_dict) >= min_listings:
+                self._logger.info(
+                    "Reached minimum listings target (%d >= %d)",
+                    len(all_listings_dict), min_listings,
+                )
+                break
+
+            # Try to click Load More
+            has_next = await self.get_next_page(tab)
+            if not has_next:
+                self._logger.info("No 'Muat lainnya' button found after page %d.", page_num)
+                break
+
+            page_num += 1
+
+        return list(all_listings_dict.values())

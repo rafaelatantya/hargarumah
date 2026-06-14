@@ -14,14 +14,10 @@ logger = logging.getLogger(__name__)
 class CariPropertiScraper(BaseScraper):
     """Scraper for CariProperti.com
 
-    Edge Cases Handled:
-    1. Infinite Scroll: Uses `tab.scroll_down` and evaluates DOM changes to detect end.
-    2. Range Prices: Extracts the lowest price from formats like 'Rp 1.7 Milyar - Rp 3.1 Milyar'.
-    3. URL structure: `cariproperti.com/<area>` or `<area>/<district>`.
-    4. BaseScraper `scrape()` compatibility: Since BaseScraper iterates by page number
-       but this site uses infinite scroll, we override `scrape()` entirely or adapt `get_next_page`
-       to perform infinite scroll within a single page load. Overriding `scrape` is cleaner
-       for infinite scroll sites.
+    Handles:
+    1. AJAX Pagination: Uses "Next" button on desktop.
+    2. Range Prices: Extracts the lowest price from ranges.
+    3. Spec parsing: Handles KT/KM and LT/LB correctly.
     """
 
     site_name = "cariproperti"
@@ -29,7 +25,6 @@ class CariPropertiScraper(BaseScraper):
 
     async def build_search_url(self, area_name: str, page: int = 1) -> str:
         """Construct the search URL. Note: CariProperti doesn't use page numbers in URL."""
-        # E.g., area_name = 'bekasi' or 'bekasi/bekasi-barat'
         return f"{self.base_url}/{area_name}"
 
     async def extract_listings(self, tab: Any) -> list[PropertyListing]:
@@ -38,15 +33,12 @@ class CariPropertiScraper(BaseScraper):
         (() => {
             try {
                 const listings = [];
-                // Target the specific a.new-map-card wrappers
                 const cards = document.querySelectorAll('a.new-map-card');
 
                 for (const card of cards) {
                     try {
                         const url = card.href;
-                        // The wrapper contains siblings/children with the actual text
-                        const parent = card.parentElement;
-                        const fullText = parent ? parent.innerText : card.innerText;
+                        const fullText = card.innerText || "";
 
                         listings.push({
                             url: url,
@@ -79,8 +71,6 @@ class CariPropertiScraper(BaseScraper):
                 if not url:
                     continue
 
-                # ID: Extract from URL (e.g., .../properti/nama-properti-123)
-                # Or generate hash if no clear ID. We'll use the last slug segment.
                 listing_id = url.split('/')[-1] if not url.endswith('/') else url.split('/')[-2]
 
                 text = raw.get("fullText", "")
@@ -91,36 +81,41 @@ class CariPropertiScraper(BaseScraper):
                 if not lines:
                     continue
 
-                # Title is usually the first line
                 title = lines[0]
 
                 # Find price (handle ranges, take lowest)
                 price_text = ""
-                price_match = re.search(r'Rp\s*[\d.,]+\s*(?:Milyar|Juta|M|Jt)', text, re.IGNORECASE)
+                price_match = re.search(r'Rp\s*[\d.,]+\s*(?:Milyar|Miliar|Juta|M|Jt|T|Triliun)?', text, re.IGNORECASE)
                 if price_match:
                     price_text = price_match.group(0)
                 else:
-                    continue # Price is mandatory
+                    continue  # Price is mandatory
+
+                # Normalize the decimal dot to comma so parse_indonesian_price works
+                price_text_norm = re.sub(r'\b(\d+)\.(\d{1,2})\b', r'\1,\2', price_text)
 
                 try:
-                    price_idr = PropertyListing.parse_indonesian_price(price_text)
+                    price_idr = PropertyListing.parse_indonesian_price(price_text_norm)
                 except ValueError:
                     continue
 
                 # Location usually below title
-                address = lines[1] if len(lines) > 1 else None
+                address = lines[2] if len(lines) > 2 and "rp" in lines[1].lower() else lines[1] if len(lines) > 1 else None
 
                 # Specs: KT, KM, LT, LB
                 kt, km, lt, lb = None, None, None, None
 
-                # KT/KM format: "2 - 3 KT"
+                # KT/KM format: "3 - 4KT" or "3KT"
                 kt_match = re.search(r'(\d+)\s*(?:-\s*\d+\s*)?KT', text, re.IGNORECASE)
                 if kt_match:
                     kt = int(kt_match.group(1))
 
-                # LB/LT format: "30 - 45 m²"
-                # Usually first m2 is LB, second is LT based on docs, but we'll try to find both
-                area_matches = re.findall(r'(\d+)\s*(?:-\s*\d+\s*)?m²', text, re.IGNORECASE)
+                km_match = re.search(r'(\d+)\s*(?:-\s*\d+\s*)?KM', text, re.IGNORECASE)
+                if km_match:
+                    km = int(km_match.group(1))
+
+                # LB/LT format: "70 - 126m2"
+                area_matches = re.findall(r'(\d+)\s*(?:-\s*\d+\s*)?m[²2]', text, re.IGNORECASE)
                 if len(area_matches) >= 1:
                     lb = float(area_matches[0])
                 if len(area_matches) >= 2:
@@ -144,17 +139,44 @@ class CariPropertiScraper(BaseScraper):
             except Exception as e:
                 self._logger.warning(f"Failed to parse listing {raw.get('url')}: {e}")
 
-        # Deduplicate based on ID since infinite scroll will re-read early elements
-        unique_listings = {l.id: l for l in listings}.values()
-        return list(unique_listings)
+        return listings
 
     async def get_next_page(self, tab: Any) -> bool:
+        """Click the 'Next' button to navigate to the next page of results."""
+        # 1. Get the first card href before click
+        js_first_href = "(() => { const c = document.querySelector('a.new-map-card'); return c ? c.href : ''; })()"
+        old_href = await tab.evaluate(js_first_href)
+
+        # 2. Click the 'Next' button
+        js_click = """
+        (() => {
+            const btns = Array.from(document.querySelectorAll('button'));
+            const nextBtn = btns.find(b => b.innerText.trim().toLowerCase() === 'next');
+            if (nextBtn && !nextBtn.disabled && !nextBtn.hasAttribute('disabled')) {
+                nextBtn.click();
+                return true;
+            }
+            return false;
+        })();
         """
-        Since CariProperti uses infinite scroll, 'next page' means scrolling down.
-        However, to integrate cleanly with `BaseScraper.scrape()`, which expects page URL changes,
-        we override `scrape()` directly.
-        """
-        return False
+        clicked = await tab.evaluate(js_click)
+        if not clicked:
+            return False
+
+        # 3. Wait for page transition (first card href changes)
+        success = False
+        for _ in range(20):
+            await asyncio.sleep(0.5)
+            new_href = await tab.evaluate(js_first_href)
+            if new_href and new_href != old_href:
+                success = True
+                break
+
+        if not success:
+            # Fallback sleep if it took longer
+            await asyncio.sleep(2.0)
+
+        return True
 
     async def scrape(
         self,
@@ -162,70 +184,53 @@ class CariPropertiScraper(BaseScraper):
         min_listings: int | None = None,
         max_pages: int | None = None,
     ) -> list[PropertyListing]:
-        """Override scrape to handle Infinite Scroll instead of URL pagination."""
+        """Override scrape to handle AJAX pagination instead of URL page reloading."""
         from src.config.settings import settings
 
         if min_listings is None:
             min_listings = settings.scraping.min_listings
+        if max_pages is None:
+            max_pages = 999
 
         all_listings_dict: dict[str, PropertyListing] = {}
 
         url = await self.build_search_url(area_name)
-        self._logger.info(f"Starting infinite scroll scrape on {url}")
+        self._logger.info(f"Starting scrape on {url}")
 
         tab = await self.browser.get_page(url)
-        await asyncio.sleep(3) # Wait for initial load
+        # Wait for page content to load
+        await asyncio.sleep(random.uniform(2.0, 4.0))
 
-        # Optionally click 'Residential' filter if needed. The prompt says we can rely on Pydantic filtering
-        # but clicking is safer. We'll skip for now and filter post-scrape if needed, or implement simple JS click.
-
-        scroll_attempts = 0
-        max_scrolls = 50 # Safeguard
-        last_count = 0
-
-        while scroll_attempts < max_scrolls:
+        page_num = 1
+        while page_num <= max_pages:
+            # Extract listings from current page state
             listings = await self.extract_listings(tab)
+            if not listings:
+                self._logger.info("No listings found on page %d, stopping.", page_num)
+                break
+
             for listing in listings:
                 all_listings_dict[listing.id] = listing
 
-            current_count = len(all_listings_dict)
-            self._logger.info(f"Scroll {scroll_attempts}: Found {current_count} unique listings so far.")
+            self._logger.info(
+                "Page %d: extracted %d listings (total unique: %d)",
+                page_num, len(listings), len(all_listings_dict),
+            )
 
-            if current_count >= min_listings:
-                self._logger.info("Reached minimum listings target.")
+            # Check if we have enough listings
+            if len(all_listings_dict) >= min_listings:
+                self._logger.info(
+                    "Reached minimum listings target (%d >= %d)",
+                    len(all_listings_dict), min_listings,
+                )
                 break
 
-            if current_count == last_count and scroll_attempts > 0:
-                # Might be at the end, or needs more time. We'll give it one more try
-                self._logger.info("No new listings found after scroll. Waiting longer...")
-                await asyncio.sleep(2)
+            # Try to go to next page
+            has_next = await self.get_next_page(tab)
+            if not has_next:
+                self._logger.info("No more pages available after page %d.", page_num)
+                break
 
-            last_count = current_count
-
-            # Perform scroll
-            # CariProperti has a split pane, we need to scroll the listing container.
-            # Using JS to find scrollable container and scroll it down.
-            js_scroll = """
-            (() => {
-                // Find the likely container (usually has overflow-y: auto)
-                const containers = Array.from(document.querySelectorAll('div')).filter(el => {
-                    const style = window.getComputedStyle(el);
-                    return style.overflowY === 'auto' || style.overflowY === 'scroll';
-                });
-
-                // Usually the main list container is the largest scrollable one
-                let target = window; // Fallback
-                if (containers.length > 0) {
-                    target = containers.sort((a, b) => b.clientHeight - a.clientHeight)[0];
-                    target.scrollBy(0, 1000);
-                } else {
-                    window.scrollBy(0, 1000);
-                }
-                return true;
-            })();
-            """
-            await tab.evaluate(js_scroll)
-            await asyncio.sleep(random.uniform(1.5, 3.0))
-            scroll_attempts += 1
+            page_num += 1
 
         return list(all_listings_dict.values())
