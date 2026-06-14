@@ -94,6 +94,17 @@ async def run_scrapers(full_address: str, site_filter: str = "all", min_listings
                     new_count = 0
                     for l in listings:
                         if l.id not in seen_ids:
+                            # Strict filtering: the original location string or its basic token must be in title or address
+                            # Pashouses and some others return whole-city results when missing exact match
+                            main_kw = search_levels[0].replace("-", " ").lower()
+                            title_norm = l.title.lower() if l.title else ""
+                            addr_norm = l.address.lower() if l.address else ""
+
+                            # If we are scraping a wider level, we still enforce the user's primary keyword
+                            # to prevent leakage from fallback logic inside the property portal.
+                            if main_kw not in title_norm and main_kw not in addr_norm:
+                                continue
+
                             seen_ids.add(l.id)
                             site_results.append(l)
                             all_results.append(l)
