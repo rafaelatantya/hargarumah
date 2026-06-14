@@ -71,20 +71,32 @@ class DekorumaScraper(BaseScraper):
                         const innerText = card.innerText;
                         const innerHTML = card.innerHTML;
 
-                        // For secondary homes, we look for parent elements of svgs
+                        // Identify secondary homes by checking if the SVG path starts with M3
+                        // M3 represents the bedroom icon
+                        let bedrooms = null;
+                        let bathrooms = null;
+
                         const svgs = Array.from(card.querySelectorAll('svg'));
-                        const specsTexts = svgs.map(svg => {
-                            if (svg && svg.parentElement) {
-                                return svg.parentElement.innerText.trim();
+                        for (const svg of svgs) {
+                            if (svg.innerHTML.includes('M3') || svg.innerHTML.includes('d="M3')) {
+                                const parent = svg.parentElement;
+                                if (parent && parent.nextElementSibling) {
+                                    bedrooms = parseInt(parent.nextElementSibling.innerText.trim());
+                                }
+                            } else if (svg.innerHTML.includes('M8') || svg.innerHTML.includes('d="M8')) {
+                                const parent = svg.parentElement;
+                                if (parent && parent.nextElementSibling) {
+                                    bathrooms = parseInt(parent.nextElementSibling.innerText.trim());
+                                }
                             }
-                            return '';
-                        });
+                        }
 
                         listings.push({
                             url: url,
                             fullText: innerText,
                             html: innerHTML,
-                            specsTexts: specsTexts
+                            bedrooms: bedrooms,
+                            bathrooms: bathrooms
                         });
                     } catch (innerErr) {
                         listings.push({error: innerErr.toString(), url: card.href});
@@ -156,22 +168,11 @@ class DekorumaScraper(BaseScraper):
                         if val:
                             km = int(val.group(1))
 
-                # Secondary homes might have isolated SVG spans
-                if kt is None or km is None:
-                    specs_texts = raw.get("specsTexts", [])
-                    plausible_specs = []
-                    for spec in specs_texts:
-                        # Extract digits only, e.g. "3\n2\n1" -> we only want the first or clean them
-                        num_match = re.search(r'^(\d+)$', spec.strip())
-                        if num_match:
-                            val = int(num_match.group(1))
-                            if val < 20: # Plausible bedroom/bathroom limit
-                                plausible_specs.append(val)
-
-                    if len(plausible_specs) >= 1 and kt is None:
-                        kt = plausible_specs[0]
-                    if len(plausible_specs) >= 2 and km is None:
-                        km = plausible_specs[1]
+                # If KT/KM wasn't found in the text directly, use our JS extraction fallback
+                if kt is None and raw.get("bedrooms") is not None and not str(raw.get("bedrooms")) == "NaN":
+                    kt = int(raw.get("bedrooms"))
+                if km is None and raw.get("bathrooms") is not None and not str(raw.get("bathrooms")) == "NaN":
+                    km = int(raw.get("bathrooms"))
 
                 listing = PropertyListing(
                     id=listing_id,

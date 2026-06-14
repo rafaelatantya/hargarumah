@@ -18,62 +18,35 @@ logger = logging.getLogger(__name__)
 def generate_search_levels(address: str) -> list[str]:
     """
     Memecah alamat dengan cara mencopot bagian spesifik dari depan ke belakang.
-    Contoh request:
-    Input: "Jl. Taman Anggrek Bulan 15-8 RT.002/RW.014, Jaka Setia, Kec. Bekasi Sel., Kota Bks"
-    Lvl 1: "Jl. Taman Anggrek Bulan 15-8 RT.002/RW.014, Jaka Setia, Kec. Bekasi Sel., Kota Bks"
-    Lvl 2: "RT.002/RW.014, Jaka Setia, Kec. Bekasi Sel., Kota Bks"
-    Lvl 3: "Jaka Setia, Kec. Bekasi Sel., Kota Bks"
-    Lvl 4: "Kec. Bekasi Sel., Kota Bks"
-    Lvl 5: "Kota Bks"
     """
     text = address.encode('ascii', 'ignore').decode('ascii').strip()
 
+    # Kunci untuk URL construction yang lebih baik
+    text = text.replace(" ", "-").lower()
+
     norm_text = text
-    norm_text = re.sub(r'\bbks\b', 'Bekasi', norm_text, flags=re.IGNORECASE)
-    norm_text = re.sub(r'\bjkt\b', 'Jakarta', norm_text, flags=re.IGNORECASE)
-    norm_text = norm_text.replace('Sel.', 'Selatan').replace('Tim.', 'Timur').replace('Bar.', 'Barat').replace('Ut.', 'Utara')
+    norm_text = re.sub(r'\bbks\b', 'bekasi', norm_text, flags=re.IGNORECASE)
+    norm_text = re.sub(r'\bjkt\b', 'jakarta', norm_text, flags=re.IGNORECASE)
+    norm_text = norm_text.replace('sel.', 'selatan').replace('tim.', 'timur').replace('bar.', 'barat').replace('ut.', 'utara')
 
     levels = []
 
-    if "," in norm_text:
-        parts = [p.strip() for p in norm_text.split(",")]
+    # Original address hyphenated
+    levels.append(norm_text)
 
-        first_part = parts[0]
-        rt_match = re.search(r'(RT\.?\s*\d+/?RW\.?\s*\d+)', first_part, re.IGNORECASE)
+    # Remove city/district/kecamatan indicators
+    clean_text = norm_text.replace('kecamatan-', '').replace('kec.-', '').replace('kota-', '').replace('kabupaten-', '').replace('kab.-', '')
+    if clean_text != norm_text:
+        levels.append(clean_text)
 
-        base_parts = []
-        if rt_match:
-            rt_str = rt_match.group(1)
-            jalan_str = first_part.replace(rt_str, '').strip()
-            if jalan_str:
-                base_parts.append(jalan_str)
-            base_parts.append(rt_str)
-        else:
-            base_parts.append(first_part)
+    # Just the parts (split by - and try different combinations)
+    parts = clean_text.split("-")
+    if len(parts) > 1:
+        # e.g. "bekasi-selatan" -> "selatan"
+        for i in range(1, len(parts)):
+            levels.append("-".join(parts[i:]))
 
-        all_parts = base_parts + parts[1:]
-
-        for i in range(len(all_parts)):
-            level_str = " ".join(all_parts[i:])
-            level_str = " ".join(level_str.split())
-            if level_str and level_str not in levels:
-                levels.append(level_str)
-
-        clean_kec = re.sub(r'Kec\.|Kecamatan', '', all_parts[-2] if len(all_parts) >= 2 else '').strip()
-        clean_kota = re.sub(r'Kota|Kab\.|Kabupaten', '', all_parts[-1] if len(all_parts) >= 1 else '').strip()
-        pure_level = f"{clean_kec} {clean_kota}".strip()
-        pure_level = " ".join(pure_level.split())
-        if pure_level and pure_level not in levels:
-            levels.append(pure_level)
-
-    else:
-        words = norm_text.split()
-        for i in range(0, len(words), max(1, len(words)//3)):
-            level_str = " ".join(words[i:])
-            if level_str and level_str not in levels:
-                levels.append(level_str)
-
-    return levels
+    return list(dict.fromkeys(levels)) # deduplicate
 
 
 async def run_scrapers(full_address: str, site_filter: str = "all", min_listings: int = 10) -> list[PropertyListing]:

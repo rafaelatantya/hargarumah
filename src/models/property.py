@@ -130,7 +130,12 @@ class PropertyListing(BaseModel):
             pattern = rf"([\d.,]+)\s*{re.escape(abbr)}"
             match = re.search(pattern, cleaned)
             if match:
-                num_str = match.group(1).replace(".", "").replace(",", ".")
+                val_str = match.group(1)
+                if val_str.count(".") == 1 and val_str.count(",") == 0:
+                    # Single dot is decimal separator
+                    num_str = val_str
+                else:
+                    num_str = val_str.replace(".", "").replace(",", ".")
                 return int(float(num_str) * multiplier)
 
         # Try direct number format (e.g., "850.000.000" or "850000000")

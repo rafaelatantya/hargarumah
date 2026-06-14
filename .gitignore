@@ -25,6 +25,8 @@ env/
 .env
 .env.local
 .env.production
+.claude/settings.local.json
+.mcp.json
 
 # ===== Data Output (large files, regeneratable) =====
 data/raw/*.json

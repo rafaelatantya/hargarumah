@@ -9,67 +9,24 @@ logger = logging.getLogger(__name__)
 
 
 class PinhomeScraper(BaseScraper):
-    """Scraper for Pinhome.id"""
+    """Scraper for Pinhome.id
+
+    As of June 2026, Pinhome no longer supports city/district URL filtering.
+    The browse page is simply /jual/rumah/ with ?page=N pagination.
+    Detail links use /dijual/rumah-baru/ and /dijual/rumah-sekunder/unit/.
+    """
 
     site_name = "pinhome"
     base_url = "https://www.pinhome.id"
 
     async def build_search_url(self, area_name: str, page: int = 1) -> str:
-        """Construct the search URL for a given area and page number."""
-        if "/" in area_name:
-            parts = area_name.split("/")
-            if len(parts) >= 2:
-                city, district = parts[-2], parts[-1]
-            else:
-                city, district = "bekasi", area_name
-        else:
-            city = "bekasi"
-            district = area_name
-
-        city_lower = city.lower()
-        district_lower = district.lower().replace("_", "-")
-
-        # Map to proper Pinhome geography path: {province}/{city}/{district}
-        if "bekasi" in city_lower:
-            province = "jawa-barat"
-            city_path = "bekasi"
-        elif "jakarta-selatan" in city_lower:
-            province = "dki-jakarta"
-            city_path = "jakarta-selatan"
-        elif "jakarta-barat" in city_lower:
-            province = "dki-jakarta"
-            city_path = "jakarta-barat"
-        elif "jakarta-timur" in city_lower:
-            province = "dki-jakarta"
-            city_path = "jakarta-timur"
-        elif "jakarta-utara" in city_lower:
-            province = "dki-jakarta"
-            city_path = "jakarta-utara"
-        elif "jakarta-pusat" in city_lower:
-            province = "dki-jakarta"
-            city_path = "jakarta-pusat"
-        elif "tangerang-selatan" in city_lower:
-            province = "banten"
-            city_path = "tangerang-selatan"
-        elif "tangerang" in city_lower:
-            province = "banten"
-            city_path = "tangerang"
-        elif "depok" in city_lower:
-            province = "jawa-barat"
-            city_path = "depok"
-        elif "bogor" in city_lower:
-            province = "jawa-barat"
-            city_path = "bogor"
-        elif "bandung" in city_lower:
-            province = "jawa-barat"
-            city_path = "bandung"
-        else:
-            province = "jawa-barat"
-            city_path = city_lower
-
-        url = f"{self.base_url}/jual/rumah/{province}/{city_path}/{district_lower}/"
+        """Construct the search URL.
+        Pinhome supports keyword search via ?keyword= parameter.
+        """
+        keyword = area_name.replace("/", " ").replace("_", " ").replace("-", " ").strip()
+        url = f"{self.base_url}/jual/rumah/?keyword={keyword}"
         if page > 1:
-            url += f"?page={page}"
+            url += f"&page={page}"
         return url
 
     async def extract_listings(self, tab: Any) -> list[PropertyListing]:
@@ -79,16 +36,13 @@ class PinhomeScraper(BaseScraper):
         close_popup_js = """
         (() => {
             try {
-                const closeBtns = Array.from(document.querySelectorAll('button, div, span, a')).filter(el => {
-                    const cls = (el.className || '').toString().toLowerCase();
-                    const id = (el.id || '').toString().toLowerCase();
-                    const txt = el.innerText || '';
-                    return cls.includes('close') || id.includes('close') || txt === '✕' || txt.toLowerCase() === 'tutup' || txt.toLowerCase().includes('close');
+                // Close any overlay/modal with close buttons
+                const closeBtns = Array.from(document.querySelectorAll('button, div, span')).filter(el => {
+                    const txt = (el.innerText || '').trim();
+                    return txt === '✕' || txt === 'X' || txt.toLowerCase() === 'tutup';
                 });
                 for (const btn of closeBtns) {
-                    try {
-                        btn.click();
-                    } catch (err) {}
+                    try { btn.click(); } catch (e) {}
                 }
             } catch (e) {}
         })();
@@ -96,7 +50,7 @@ class PinhomeScraper(BaseScraper):
         await tab.evaluate(close_popup_js)
 
         # 2. Scroll to load lazy content
-        await self.browser.scroll_page(tab, scroll_count=6)
+        await self.browser.scroll_page(tab, scroll_count=8)
 
         # 3. Extract card listings via JS
         js_code = """
@@ -110,56 +64,37 @@ class PinhomeScraper(BaseScraper):
                         const url = link.href;
                         if (!url || seen.has(url)) continue;
 
-                        // Check if it is a property detail page link
+                        // Match property detail links
                         const isDetail = url.includes('/dijual/rumah-baru/') || url.includes('/dijual/rumah-sekunder/');
                         if (!isDetail) continue;
 
                         seen.add(url);
 
-                        let card = link.parentElement;
-                        let foundCard = false;
-                        for (let i = 0; i < 10; i++) {
-                            if (card && card.className && (
-                                card.className.includes('pin-card__base') ||
-                                card.className.includes('card-list-wrapper') ||
-                                card.className.includes('pin-card_standard')
-                            )) {
-                                foundCard = true;
-                                break;
+                        // Walk up to find the card container
+                        let card = link;
+                        for (let i = 0; i < 8; i++) {
+                            if (card.parentElement) {
+                                card = card.parentElement;
+                                // Stop when we find a container with enough text
+                                if (card.innerText && card.innerText.length > 100 &&
+                                    card.innerText.includes('Rp')) {
+                                    break;
+                                }
                             }
-                            if (card) card = card.parentElement;
-                        }
-                        if (!foundCard) {
-                            card = link.parentElement?.parentElement?.parentElement || link;
                         }
 
-                        let title = '';
-                        const titleEl = card.querySelector('h1, h2, h3, h4, h5, [class*="title"], [class*="Title"]');
-                        if (titleEl) {
-                            title = titleEl.innerText;
-                        } else {
-                            title = link.title || link.innerText || 'No title';
-                        }
-
-                        let price = '';
-                        const priceMatch = card.innerText.match(/Rp\\s*[\\d.,]+\\s*[A-Za-z]*/);
-                        if (priceMatch) {
-                            price = priceMatch[0];
-                        }
+                        const fullText = card.innerText || '';
+                        if (!fullText || !fullText.includes('Rp')) continue;
 
                         listings.push({
                             url: url,
-                            title: title,
-                            priceText: price,
-                            fullText: card ? card.innerText : ''
+                            fullText: fullText
                         });
-                    } catch (innerErr) {
-                        listings.push({error: innerErr.toString(), url: link.href});
-                    }
+                    } catch (innerErr) {}
                 }
                 return JSON.stringify(listings);
             } catch (err) {
-                return JSON.stringify([{error: err.toString()}]);
+                return JSON.stringify([]);
             }
         })();
         """
@@ -179,99 +114,92 @@ class PinhomeScraper(BaseScraper):
         for raw in raw_listings:
             try:
                 url = raw.get("url", "")
-                if "error" in raw or not url:
+                if not url:
                     continue
 
-                # Extract listing ID (slug at end of path)
-                listing_id = url.split('/')[-1] if url.split('/')[-1] else url.split('/')[-2]
-
-                title = raw.get("title", "").strip()
-                if not title:
-                    title = raw.get("fullText", "").split("\n")[0]
-
-                price_text = raw.get("priceText", "")
-                if not price_text:
-                    continue
-
-                price_idr = PropertyListing.parse_indonesian_price(price_text)
+                # Extract listing ID from URL slug
+                parts = url.rstrip("/").split("/")
+                listing_id = parts[-1] if parts[-1] else parts[-2]
 
                 text = raw.get("fullText", "")
                 lines = [line.strip() for line in text.split('\n') if line.strip()]
+                if not lines:
+                    continue
 
-                lt = None
-                lb = None
-                kt = None
-                km = None
+                # Extract title: find the longest descriptive line
+                title = None
+                for line in lines:
+                    if "Rp" in line or "KPR" in line or "Brosur" in line or "Chat" in line:
+                        continue
+                    if "Diperbarui" in line or "Agen" in line or "Developer" in line:
+                        continue
+                    if len(line) > 20 and not re.match(r'^\d', line):
+                        title = line
+                        break
+                if not title:
+                    # Fallback: use lines that look like a property name
+                    for line in lines:
+                        if len(line) > 10 and "Rp" not in line and "LT" not in line:
+                            title = line
+                            break
+                if not title:
+                    title = listing_id
 
-                # Area parser helper
-                def parse_area(val_str: str) -> float | None:
-                    num_match = re.search(r'([\d.,]+)', val_str)
-                    if num_match:
-                        clean_str = num_match.group(1)
-                        if ',' in clean_str and '.' in clean_str:
-                            clean_str = clean_str.replace('.', '').replace(',', '.')
-                        elif ',' in clean_str:
-                            clean_str = clean_str.replace(',', '.')
-                        try:
-                            return float(clean_str)
-                        except ValueError:
-                            pass
-                    return None
-
-                def parse_spec_num(val_str: str) -> int | None:
-                    num_match = re.match(r'^\s*(\d+)', val_str)
-                    return int(num_match.group(1)) if num_match else None
-
-                # Parse LT, LB
-                lt_match = re.search(r'LT\s*([\d.,]+)', text, re.IGNORECASE)
-                lb_match = re.search(r'LB\s*([\d.,]+)', text, re.IGNORECASE)
-                lt = parse_area(lt_match.group(1)) if lt_match else None
-                lb = parse_area(lb_match.group(1)) if lb_match else None
-
-                # Parse KT, KM (explicit tags)
-                kt_match = re.search(r'(\d+)\s*(?:KT|Kamar Tidur|🛏)', text, re.IGNORECASE)
-                km_match = re.search(r'(\d+)\s*(?:KM|Kamar Mandi|🚿)', text, re.IGNORECASE)
-
-                if kt_match:
-                    kt = int(kt_match.group(1))
-                if km_match:
-                    km = int(km_match.group(1))
-
-                # Structure-based preceding sequential lines (e.g. 3 \n 1 \n LT 58 m2)
-                lt_index = -1
-                for idx, line in enumerate(lines):
-                    if "LT" in line:
-                        lt_index = idx
+                # Extract price - first "Rp" line
+                price_text = None
+                for line in lines:
+                    if "Rp" in line and "KPR" not in line:
+                        price_text = line
                         break
 
-                if lt_index != -1:
-                    spec_lines = []
-                    for offset in range(1, 5):
-                        idx = lt_index - offset
-                        if idx < 0:
-                            break
-                        line = lines[idx]
-                        if re.match(r'^\s*\d+\s*(?:\+\s*\d+)?\s*$', line):
-                            spec_lines.append(line)
-                        else:
-                            break
-                    spec_lines.reverse()
-                    if len(spec_lines) >= 1 and kt is None:
-                        kt = parse_spec_num(spec_lines[0])
-                    if len(spec_lines) >= 2 and km is None:
-                        km = parse_spec_num(spec_lines[1])
+                if not price_text:
+                    continue
 
-                # Fallback to specs single-line layout (e.g. 3 • 1 • LT 72 m² • LB 48 m²)
-                if kt is None or km is None:
-                    for line in lines:
-                        if "LT" in line:
-                            prefix = line.split("LT")[0]
-                            nums = re.findall(r'(\d+)', prefix)
-                            if len(nums) >= 1 and kt is None:
-                                kt = int(nums[0])
-                            if len(nums) >= 2 and km is None:
-                                km = int(nums[1])
-                            break
+                # For price ranges like "Rp 1,09 Miliar - Rp 1,78 Miliar", take the first
+                price_text_clean = price_text.split(" - ")[0].strip()
+                price_idr = PropertyListing.parse_indonesian_price(price_text_clean)
+
+                lt = lb = kt = km = None
+
+                # Parse LT/LB from text
+                lt_match = re.search(r'LT\s*([\d.,]+)', text, re.IGNORECASE)
+                lb_match = re.search(r'LB\s*([\d.,]+)', text, re.IGNORECASE)
+                if lt_match:
+                    lt = self._parse_area(lt_match.group(1))
+                if lb_match:
+                    lb = self._parse_area(lb_match.group(1))
+
+                # Parse KT/KM - look for lines with just numbers before LT
+                # Pattern in body: "3-5\n2-4\nLT 88 - 262 m²\nLB 75 - 184 m²"
+                # or "2\n1\nLT 244 m²\nLB 90 m²"
+                for idx, line in enumerate(lines):
+                    if "LT" in line and "LT" == line[:2].upper():
+                        # Look backward for number-only lines
+                        nums_before = []
+                        for back in range(1, 4):
+                            prev_idx = idx - back
+                            if prev_idx < 0:
+                                break
+                            prev = lines[prev_idx].strip()
+                            # Match "3", "3-5", "2-4" patterns
+                            if re.match(r'^\d+(?:\s*[-]\s*\d+)?$', prev):
+                                nums_before.insert(0, prev)
+                            else:
+                                break
+                        if len(nums_before) >= 2 and kt is None:
+                            # First is bedrooms, second is bathrooms
+                            kt = self._parse_range_first(nums_before[0])
+                            km = self._parse_range_first(nums_before[1])
+                        elif len(nums_before) == 1 and kt is None:
+                            kt = self._parse_range_first(nums_before[0])
+                        break
+
+                # Location extraction
+                location = None
+                for line in lines:
+                    if "," in line and ("Kota" in line or "Kab" in line):
+                        location = line
+                        break
 
                 listing = PropertyListing(
                     id=listing_id,
@@ -283,6 +211,7 @@ class PinhomeScraper(BaseScraper):
                     building_area_m2=lb,
                     bedrooms=kt,
                     bathrooms=km,
+                    address=location,
                     property_type="rumah",
                     listing_type="dijual"
                 )
@@ -293,14 +222,20 @@ class PinhomeScraper(BaseScraper):
         return listings
 
     async def get_next_page(self, tab: Any) -> bool:
-        """Navigate to the next page of results."""
+        """Check if there is a next page."""
         js_code = """
         (() => {
-            const pagination = document.querySelector('[class*="pagination"], [class*="Pagination"]');
-            if (!pagination) return false;
-
-            const nextBtn = pagination.querySelector('a:last-child, button:last-child, [class*="next"], [class*="Next"]');
-            if (nextBtn && !nextBtn.classList.contains('disabled') && !nextBtn.hasAttribute('disabled') && !nextBtn.parentElement.classList.contains('disabled')) {
+            // Look for pagination with a "next" or ">" button
+            const allLinks = document.querySelectorAll('a');
+            for (const a of allLinks) {
+                const text = (a.innerText || '').trim();
+                if (text === '>' || text === 'Next' || text === '»') {
+                    return true;
+                }
+            }
+            // Also check for numbered pagination where current page < last page
+            const pageNums = document.querySelectorAll('[class*="pagination"] a, [class*="Pagination"] a');
+            if (pageNums.length > 0) {
                 return true;
             }
             return false;
@@ -308,3 +243,27 @@ class PinhomeScraper(BaseScraper):
         """
         has_next = await tab.evaluate(js_code)
         return has_next
+
+    @staticmethod
+    def _parse_area(val_str: str) -> float | None:
+        """Parse area value like '72', '1,200', '88 - 262' (takes first)."""
+        # Take first number in a range
+        val_str = val_str.split("-")[0].strip()
+        num_match = re.search(r'([\d.,]+)', val_str)
+        if num_match:
+            clean = num_match.group(1)
+            if ',' in clean and '.' in clean:
+                clean = clean.replace('.', '').replace(',', '.')
+            elif ',' in clean:
+                clean = clean.replace(',', '.')
+            try:
+                return float(clean)
+            except ValueError:
+                pass
+        return None
+
+    @staticmethod
+    def _parse_range_first(val_str: str) -> int | None:
+        """Parse '3' or '3-5' and return the first number."""
+        m = re.match(r'(\d+)', val_str.strip())
+        return int(m.group(1)) if m else None
