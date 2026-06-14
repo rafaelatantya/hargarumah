@@ -4,10 +4,14 @@ import re
 import sys
 import logging
 from typing import List
+from pathlib import Path
 
 from src.core.browser import BrowserManager
 from src.scrapers import get_scrapers
 from src.models.property import PropertyListing
+from src.storage.database import Database
+from src.export.exporter import export_all
+from src.core.geo import find_areas_within_radius
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +133,34 @@ async def run_scrapers(full_address: str, site_filter: str = "all", min_listings
             print(f"    => Total dari {name}: {len(site_results)} listing.\n")
 
         print(f"[+] Pencarian selesai. Total {len(all_results)} listing unik ditemukan dari {len(scraper_classes)} situs.\n")
+
+        # --- STORAGE & EXPORT LAYER ---
+        if all_results:
+            print("[*] Menyimpan data ke SQLite Database...")
+            db = Database()
+            await db.connect()
+            inserted_count = await db.save_many(all_results)
+            await db.close()
+            print(f"    -> Tersimpan: {inserted_count} listing baru di database.")
+
+            print("[*] Mengekspor hasil ke JSON, CSV, dan XLSX...")
+            # Simulasi koordinat pusat (karena input kita alamat teks, bukan koordinat)
+            # Default kita pasang koordinat nol, atau jika ada geo resolver bisa disesuaikan
+            center_lat, center_lng, radius = 0.0, 0.0, 0.0
+
+            # Convert models to dict for exporter
+            dict_listings = [listing.model_dump(mode="json") for listing in all_results]
+
+            exports = await export_all(
+                listings=dict_listings,
+                center_lat=center_lat,
+                center_lng=center_lng,
+                radius_km=radius
+            )
+            print("    -> Export selesai:")
+            for fmt, path in exports.items():
+                print(f"       [{fmt.upper()}] {path}")
+            print()
 
         _print_summary(scraper_classes, all_results, min_listings)
 
