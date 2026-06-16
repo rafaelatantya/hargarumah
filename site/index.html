@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HargaRumah - Stealth property intelligence for Indonesia</title>
+  <meta name="description" content="Coordinate-based scraper for 8 Indonesian property sites. Stealth CDP, structured output, no detection.">
+  <meta name="theme-color" content="#0A0A0B">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="hero-text reveal">
+        <span class="eyebrow">Selected work 2026</span>
+        <h1>Stealth property intelligence across 8 Indonesian markets</h1>
+        <p>Coordinate-based scraping for fragmented Indonesian real estate. CDP, no detection, structured output.</p>
+        <div class="ctas">
+          <a href="animated/" class="btn-primary">Lihat live demo &rarr;</a>
+          <a href="https://github.com/rafaelatantya/hargarumah" class="btn-secondary" target="_blank" rel="noopener">View source</a>
+          <a href="#architecture" class="btn-secondary">Read architecture</a>
+        </div>
+      </div>
+      <div class="hero-asset reveal">
+        <div class="window">
+          <div class="window-chrome">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="window-title">hargarumah / terminal</span>
+          </div>
+          <pre><code><span class="prompt">$</span> uv run python main.py "harjamukti" --site rumah123 --min 100
+
+<span class="log">[hargarumah]</span> resolving area
+<span class="log">[hargarumah]</span>   harjamukti
+<span class="log">[hargarumah]</span> launching browser
+<span class="log">[hargarumah]</span> [rumah123]   55 listings / 3 pages
+
+<span class="ok">ok</span>  55 listings, 1 source
+<span class="log">saved</span>  data/listings.json
+       data/listings.csv
+       data/listings.xlsx
+       site/data/harjamukti.json</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="problem">
+      <div class="reveal">
+        <h2>Eight sites. No consolidated view.</h2>
+        <p>Indonesian property data lives in a dozen separate platforms. Each has its own URL pattern, DOM structure, and rate limit. Manual collection does not scale past a single neighborhood.</p>
+      </div>
+    </section>
+
+    <section class="architecture" id="architecture">
+      <div class="section-head reveal">
+        <span class="eyebrow">Architecture</span>
+        <h2>Five stages from coordinates to structured data.</h2>
+      </div>
+      <div class="bento">
+        <article class="bento-cell bento-wide reveal">
+          <span class="cell-label">01</span>
+          <h3>Orchestrator</h3>
+          <p>Coordinates the 8 scrapers, validates through Pydantic, deduplicates at storage, exports to JSON, CSV, and XLSX.</p>
+          <pre class="code-snippet"><code><span class="kw">async def</span> <span class="fn">run_scrapers</span>(
+    keyword: <span class="typ">str</span>,
+    site_filter: <span class="typ">str</span> = <span class="str">"all"</span>,
+    min_listings: <span class="typ">int</span> = <span class="num">10</span>,
+) -&gt; <span class="typ">None</span>:
+    areas = <span class="kw">await</span> geo.resolve(keyword)
+    <span class="kw">async with</span> BrowserManager() <span class="kw">as</span> browser:
+        <span class="kw">for</span> scraper <span class="kw">in</span> get_scrapers(site_filter):
+            listings = <span class="kw">await</span> scraper.scrape(
+                areas, browser, min_listings
+            )
+            <span class="kw">await</span> storage.upsert_many(listings)
+    <span class="kw">await</span> exporter.export_all(
+        formats=[<span class="str">"json"</span>, <span class="str">"csv"</span>, <span class="str">"xlsx"</span>]
+    )</code></pre>
+        </article>
+        <article class="bento-cell bento-tinted reveal">
+          <span class="cell-label">02</span>
+          <h3>Geo resolver</h3>
+          <p>Coordinate to area name, recursive address parsing from street to kecamatan. Falls back to broader levels if the specific search yields too few listings.</p>
+        </article>
+        <article class="bento-cell reveal">
+          <span class="cell-label">03</span>
+          <h3>Browser</h3>
+          <p>nodriver starts a real Chrome via CDP. No webdriver flag, no chromedriver binary, no Selenium properties. Headed mode preferred for stealth.</p>
+        </article>
+        <article class="bento-cell bento-tinted reveal">
+          <span class="cell-label">04</span>
+          <h3>Eight scrapers</h3>
+          <p>One module per site, all inheriting BaseScraper. tab.evaluate JSON.stringify, json.loads back in Python. Strict location filter applied to drop false positives.</p>
+          <ul class="cell-list">
+            <li>rumah123</li>
+            <li>99.co</li>
+            <li>pinhome</li>
+            <li>olx</li>
+            <li>cariproperti</li>
+            <li>dekoruma</li>
+            <li>pashouses</li>
+            <li>easyfind</li>
+          </ul>
+        </article>
+        <article class="bento-cell reveal">
+          <span class="cell-label">05</span>
+          <h3>Storage, export</h3>
+          <p>Async SQLite for persistence and dedup. JSON for downstream pipelines, CSV for spreadsheets, XLSX for humans.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="stack">
+      <div class="section-head reveal">
+        <h2>Stack</h2>
+      </div>
+      <div class="stack-list reveal">
+        <span class="stack-tag">Python 3.11+</span>
+        <span class="stack-tag">nodriver (CDP)</span>
+        <span class="stack-tag">Pydantic v2</span>
+        <span class="stack-tag">aiosqlite</span>
+        <span class="stack-tag">asyncio</span>
+        <span class="stack-tag">Rich</span>
+        <span class="stack-tag">uv</span>
+      </div>
+    </section>
+
+    <section class="stealth">
+      <div class="section-head reveal">
+        <h2>Stealth by design</h2>
+      </div>
+      <div class="stealth-grid">
+        <div class="stealth-text reveal">
+          <h3>CDP, not WebDriver</h3>
+          <p>nodriver talks to Chrome via DevTools Protocol. No <code>navigator.webdriver</code> flag, no chromedriver binary. Real browser fingerprint, most JS-based bot checks pass.</p>
+          <h3>Random 2 to 5 second delays</h3>
+          <p>Between navigations, between scraping sessions, between different sites. Never the same interval twice in a row.</p>
+          <h3>Optional proxy rotation</h3>
+          <p>Free proxy lists pulled on demand, validated before use, rotated per session. Falls back to direct connection if proxies fail.</p>
+        </div>
+        <div class="stealth-table reveal">
+          <h3>Per-site rate limits</h3>
+          <table>
+            <thead>
+              <tr><th>Site</th><th>Req / min</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>rumah123</td><td>10</td><td>Cloudflare</td></tr>
+              <tr><td>99.co</td><td>10</td><td>Cloudflare</td></tr>
+              <tr><td>olx</td><td>8</td><td>Aggressive</td></tr>
+              <tr><td>pinhome</td><td>12</td><td>Moderate</td></tr>
+              <tr><td>dekoruma</td><td>12</td><td>Moderate</td></tr>
+              <tr><td>caripro</td><td>15</td><td>Lighter</td></tr>
+              <tr><td>pashouses</td><td>15</td><td>Lighter</td></tr>
+              <tr><td>easyfind</td><td>15</td><td>Lighter</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="data-model">
+      <div class="section-head reveal">
+        <h2>Twenty-two fields, validated</h2>
+        <p>Every listing passes through a Pydantic model before storage. Price formats, area units, and address strings normalize to one canonical shape.</p>
+      </div>
+      <div class="code-block reveal">
+        <div class="window-chrome">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="window-title">src / models / property.py</span>
+        </div>
+<pre><code><span class="kw">class</span> <span class="cls">PropertyListing</span>(<span class="cls">BaseModel</span>):
+    <span class="cmt"># Required</span>
+    id: <span class="typ">str</span>
+    source: <span class="typ">str</span>
+    title: <span class="typ">str</span>
+    price_idr: <span class="typ">int</span> = <span class="cls">Field</span>(..., ge=<span class="num">0</span>)
+    url: <span class="typ">str</span>
+    scraped_at: <span class="typ">datetime</span>
+
+    <span class="cmt"># Location</span>
+    address: <span class="typ">str</span> | <span class="kw">None</span> = <span class="kw">None</span>
+    city: <span class="typ">str</span> | <span class="kw">None</span> = <span class="kw">None</span>
+    district: <span class="typ">str</span> | <span class="kw">None</span> = <span class="kw">None</span>
+    latitude: <span class="typ">float</span> | <span class="kw">None</span> = <span class="kw">None</span>
+    longitude: <span class="typ">float</span> | <span class="kw">None</span> = <span class="kw">None</span>
+
+    <span class="cmt"># Specs</span>
+    bedrooms: <span class="typ">int</span> | <span class="kw">None</span> = <span class="kw">None</span>
+    bathrooms: <span class="typ">int</span> | <span class="kw">None</span> = <span class="kw">None</span>
+    land_area_m2: <span class="typ">float</span> | <span class="kw">None</span> = <span class="kw">None</span>
+    building_area_m2: <span class="typ">float</span> | <span class="kw">None</span> = <span class="kw">None</span>
+
+    <span class="cmt"># Indonesian price parser</span>
+    <span class="str">"Rp 850 Jt"</span>  -&gt;  <span class="num">850_000_000</span>
+    <span class="str">"Rp 1,2 M"</span>   -&gt;  <span class="num">1_200_000_000</span>
+    <span class="str">"2 Miliar"</span>   -&gt;  <span class="num">2_000_000_000</span></code></pre>
+      </div>
+    </section>
+
+    <section class="results">
+      <div class="section-head reveal">
+        <span class="eyebrow">Outcomes</span>
+        <h2>Validated end to end.</h2>
+      </div>
+      <div class="results-grid reveal">
+        <div class="result">
+          <span class="result-num">8</span>
+          <span class="result-label">sites scraped</span>
+        </div>
+        <div class="result">
+          <span class="result-num">8</span>
+          <span class="result-label">scrapers</span>
+        </div>
+        <div class="result">
+          <span class="result-num">22</span>
+          <span class="result-label">fields / listing</span>
+        </div>
+        <div class="result">
+          <span class="result-num">3</span>
+          <span class="result-label">export formats</span>
+        </div>
+        <div class="result">
+          <span class="result-num">4</span>
+          <span class="result-label">phases complete</span>
+        </div>
+        <div class="result">
+          <span class="result-num">MIT</span>
+          <span class="result-label">licensed</span>
+        </div>
+        <a href="animated/" class="result" style="text-decoration: none; color: inherit; background: var(--accent-bg); border-color: var(--accent-border);">
+          <span class="result-num" style="color: var(--accent);">55</span>
+          <span class="result-label" style="color: var(--text);">live demo: Harjamukti &rarr;</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="foot-left">
+      <p class="foot-mark">HargaRumah 2026</p>
+      <p class="foot-sub">Built with Python, nodriver, and patience.</p>
+    </div>
+    <a href="https://github.com/rafaelatantya/hargarumah" class="foot-link" target="_blank" rel="noopener">Source on GitHub &rarr;</a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

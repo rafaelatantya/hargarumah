@@ -1,0 +1,67 @@
+name: Deploy HargaRumah site to GitHub Pages
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build animated demo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: site/animated/package-lock.json
+
+      - name: Install dependencies
+        working-directory: site/animated
+        run: npm ci --no-audit --no-fund
+
+      - name: Build Vite bundle
+        working-directory: site/animated
+        run: npm run build
+
+      - name: Stage deploy artifact
+        run: |
+          set -euo pipefail
+          rm -rf .deploy
+          mkdir -p .deploy/animated
+          # Static portfolio
+          cp site/index.html    .deploy/index.html
+          cp site/style.css     .deploy/style.css
+          cp site/script.js     .deploy/script.js
+          cp site/.nojekyll     .deploy/.nojekyll
+          # Vite build — copy dist contents up so the live URL is /animated/
+          cp -r site/animated/dist/. .deploy/animated/
+          echo "Staged deploy artifact:"
+          find .deploy -maxdepth 2 -type f -o -type d | sort
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .deploy
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

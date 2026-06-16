@@ -1,0 +1,89 @@
+/* ==========================================================
+   Page chrome — sits around the Remotion Player
+   ========================================================== */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0B1437 0%, #1F1547 30%, #4A2D5E 60%, #8B3A62 80%, #FF8E72 100%);
+}
+
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 80%, rgba(255, 213, 128, 0.35) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 12%, rgba(255, 248, 231, 0.7), transparent),
+    radial-gradient(1px 1px at 70% 8%, rgba(255, 248, 231, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 35% 22%, rgba(255, 248, 231, 0.6), transparent),
+    radial-gradient(1px 1px at 85% 18%, rgba(255, 248, 231, 0.4), transparent),
+    radial-gradient(1.2px 1.2px at 55% 5%, rgba(255, 248, 231, 0.55), transparent),
+    radial-gradient(1px 1px at 12% 28%, rgba(255, 248, 231, 0.45), transparent);
+  background-size: 100% 100%;
+  pointer-events: none;
+  opacity: 0.6;
+  animation: twinkle 6s ease-in-out infinite alternate;
+}
+
+@keyframes twinkle {
+  from { opacity: 0.45; }
+  to { opacity: 0.75; }
+}
+
+.player-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-wrap > * {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.back {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 10;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--cream-dim);
+  text-decoration: none;
+  padding: 8px 14px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+.back:hover {
+  color: var(--gold);
+  background: var(--glass-strong);
+  border-color: var(--glass-border-strong);
+}
+
+.brand {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--cream-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.brand strong { color: var(--gold); font-weight: 500; }
